@@ -18,6 +18,9 @@ private:
     QSize cameraResolution;
     int maxSkippedFrames;
     int pointsVectorLength;
+    int imageRotationAngle;
+    QPoint tableROIPoint1;
+    QPoint tableROIPoint2;
 
 public:
     Settings();
@@ -49,6 +52,12 @@ public:
     void setMaxSkippedFrames(int newMaxSkippedFrame);
     int getPointsVectorLength() const;
     void setPointsVectorLength(int newPointsArrayLength);
+    int getImageRotationAngle() const;
+    void setImageRotationAngle(int newImageRotationAngle);
+    QPoint getTableROIPoint1() const;
+    void setTableROIPoint1(QPoint newTableROIPoint1);
+    QPoint getTableROIPoint2() const;
+    void setTableROIPoint2(QPoint newTableROIPoint2);
 };
 
 

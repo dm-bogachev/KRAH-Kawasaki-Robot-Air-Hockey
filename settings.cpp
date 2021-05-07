@@ -110,6 +110,36 @@ void Settings::setPointsVectorLength(int newPointsArrayLength)
     pointsVectorLength = newPointsArrayLength;
 }
 
+int Settings::getImageRotationAngle() const
+{
+    return imageRotationAngle;
+}
+
+void Settings::setImageRotationAngle(int newImageRotationAngle)
+{
+    imageRotationAngle = newImageRotationAngle;
+}
+
+QPoint Settings::getTableROIPoint1() const
+{
+    return tableROIPoint1;
+}
+
+void Settings::setTableROIPoint1(QPoint newTableROIPoint1)
+{
+    tableROIPoint1 = newTableROIPoint1;
+}
+
+QPoint Settings::getTableROIPoint2() const
+{
+    return tableROIPoint2;
+}
+
+void Settings::setTableROIPoint2(QPoint newTableROIPoint2)
+{
+    tableROIPoint2 = newTableROIPoint2;
+}
+
 Settings::Settings()
 {
     this->settings = new QSettings(CONFIG_FILE_NAME, QSettings::IniFormat);
@@ -124,6 +154,12 @@ void Settings::Save()
     settings->setValue("gpu_acceleration", GPUAcceleration);
     settings->setValue("video_window_name", videoWindowName);
     settings->setValue("trackbars_window_name", trackbarsWindowName);
+    settings->endGroup();
+
+    settings->beginGroup("Environment_options");
+    settings->setValue("image_rotation_angle", imageRotationAngle);
+    settings->setValue("table_roi_point_1", tableROIPoint1);
+    settings->setValue("table_roi_point_2", tableROIPoint2);
     settings->endGroup();
 
     settings->beginGroup("Camera_properties");
@@ -154,6 +190,12 @@ void Settings::Load()
     setTrackbarsWindowName(settings->value("trackbars_window_name", "KRAH TRACKBARS").toString());
     settings->endGroup();
 
+    settings->beginGroup("Environment_options");
+    setImageRotationAngle(settings->value("image_rotation_angle", 0).toInt());
+    setTableROIPoint1(settings->value("table_roi_point_1", QPoint(0,0)).toPoint());
+    setTableROIPoint2(settings->value("table_roi_point_2", QPoint(cameraResolution.width(), cameraResolution.height())).toPoint());
+    settings->endGroup();
+
     settings->beginGroup("Camera_properties");
     setCameraAddress(settings->value("camera_address", 0).toInt());
     setCameraResolution(settings->value("camera_resolution", QSize(1024, 588)).toSize());
@@ -170,5 +212,7 @@ void Settings::Load()
     setMaxSkippedFrames(settings->value("max_skipped_frames", 10).toInt());
     setPointsVectorLength(settings->value("points_vector_length", 10).toInt());
     settings->endGroup();
+    setTableROIPoint2(QPoint(cameraResolution.width(), cameraResolution.height()));
+
 }
 //int param1, int param2, int minRadius, int maxRadius

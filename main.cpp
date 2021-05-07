@@ -3,7 +3,7 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
-
+#include <opencv2/aruco.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/cudaimgproc.hpp>
@@ -18,8 +18,104 @@
 #define MAX_SKIPPED_FRAMES programSettings.getMaxSkippedFrames()
 #define POINTS_VECTOR_LENGTH programSettings.getPointsVectorLength()
 
-#define CV_COLOR_RED cv::Scalar(255,0,0)
+#define pi 3.141592653589793238463
 
+#define CV_COLOR_GREEN cv::Scalar(0,255,0)
+#define CV_COLOR_RED cv::Scalar(255,0,0)
+#define CV_COLOR_BLUE cv::Scalar(0,0,255)
+#define CV_COLOR_WHITE cv::Scalar(255,255,255)
+#define CV_COLOR_BLACK cv::Scalar(0,0,0)
+
+struct pointsSortingStructure
+{
+    inline bool operator() (const cv::Point2f& struct1, const cv::Point2f& struct2)
+    {
+        return struct1.x*struct1.x + struct1.y*struct1.y < struct2.x*struct2.x + struct2.y*struct2.y;
+    }
+};
+
+cv::Point2f getRectangleCenter(std::vector<cv::Point2f> rectangleCorners)
+{
+    cv::Point2f rectangleCenter(0.f, 0.f);
+    for(int i = 0; i < 4; i++)
+    {
+        rectangleCenter += rectangleCorners[i];
+    }
+    return rectangleCenter /= 4.f;
+}
+
+void detectArucoMarkers(cv::Mat inputImage, std::vector<std::vector<cv::Point2f>> &markerCorners, std::vector<int> &markerIds)
+{
+    std::vector<std::vector<cv::Point2f>> rejectedCandidates;
+    cv::Ptr<cv::aruco::DetectorParameters> parameters = cv::aruco::DetectorParameters::create();
+    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
+
+    // Invert image because markers are white
+    cv::Mat invertedImage;
+    cv::bitwise_not(inputImage, invertedImage);
+
+    cv::aruco::detectMarkers(invertedImage, dictionary, markerCorners, markerIds, parameters, rejectedCandidates);
+    qDebug() << markerCorners.size() << "corners was detected";
+}
+
+std::vector<cv::Point> getArucoMarkersCenters(std::vector<std::vector<cv::Point2f>> markerCorners)
+{
+    std::vector<cv::Point> markerCenters;
+    for (int i = 0; i < 4; i++){markerCenters.push_back(getRectangleCenter(markerCorners[i]));}
+    std::sort(markerCenters.begin(), markerCenters.end(), pointsSortingStructure());
+    return markerCenters;
+}
+
+double getImageRotationAngle(std::vector<cv::Point> markerCenters)
+{
+/*
+    0-----------------2
+    |                 |
+    |                 |
+    |                 |
+    |                 |
+    1-----------------3
+*/
+    double rotationAngleRad = atan(double(markerCenters[0].y - markerCenters[2].y)/double(markerCenters[0].x - markerCenters[2].x));
+    return rotationAngleRad*180/pi;
+}
+
+void rotateMatByAngle(cv::Mat &mat, double angleDeg, cv::Point2f rotationPoint)
+{
+    // Get rotation matrix for rotating the image around its center in pixel coordinates
+    cv::Point2f center((mat.cols-1)/2.0, (mat.rows-1)/2.0);
+    cv::Mat rot = cv::getRotationMatrix2D(rotationPoint, angleDeg, 1.0);
+    // Determine bounding rectangle, center not relevant
+    cv::Rect2f bbox = cv::RotatedRect(cv::Point2f(), mat.size(), angleDeg).boundingRect2f();
+    // Adjust transformation matrix
+    rot.at<double>(0,2) += bbox.width/2.0 - mat.cols/2.0;
+    rot.at<double>(1,2) += bbox.height/2.0 - mat.rows/2.0;
+    cv::warpAffine(mat, mat, rot, bbox.size());
+}
+
+cv::Rect detectTableBorders(cv::Mat &frame, double &frameRotationAngle, cv::Point &frameRotationPoint)
+{
+    // For AruCo marker detection
+    std::vector<std::vector<cv::Point2f>> markerCorners;
+    std::vector<int> markerIds;
+    std::vector<cv::Point> markerCenters;
+    detectArucoMarkers(frame, markerCorners, markerIds);
+    if (markerCorners.size() == 4)
+    {
+        markerCenters = getArucoMarkersCenters(markerCorners);
+        frameRotationAngle = getImageRotationAngle(markerCenters);
+        rotateMatByAngle(frame, frameRotationAngle, markerCenters[0]);
+        detectArucoMarkers(frame, markerCorners, markerIds);
+        if (markerCorners.size() == 4){
+            markerCenters = getArucoMarkersCenters(markerCorners);
+            frameRotationPoint = markerCenters[0];
+            return cv::Rect(markerCenters[0], markerCenters[3]);
+        }
+    }
+    frameRotationAngle = 0;
+    frameRotationPoint = cv::Point(-1,-1);
+    return cv::Rect(0,0,2048, 1088);
+}
 
 void setupTrackbarsWindow(Settings &programSettings)
 {
@@ -51,7 +147,7 @@ void setupCamera(cv::VideoCapture &camera, int cameraAddress, QSize cameraResolu
     camera.set(cv::CAP_PROP_FRAME_WIDTH, cameraResolution.width());
     camera.set(cv::CAP_PROP_FRAME_HEIGHT, cameraResolution.height());
     camera.set(cv::CAP_PROP_FPS, 90);
-    camera.set(cv::CAP_PROP_EXPOSURE, 5000);
+    //qcamera.set(cv::CAP_PROP_EXPOSURE, -5000);
 }
 
 void getCameraFrame(cv::VideoCapture &camera, cv::Mat &frame)
@@ -63,7 +159,6 @@ void getCameraFrame(cv::VideoCapture &camera, cv::Mat &frame)
     }
     camera.read(frame);
     cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-    cv::cvtColor(cv::imread("pic.jpg"), frame, cv::COLOR_BGR2GRAY);
 }
 
 cv::Point3f findPuckCPU(cv::Mat &frame, Settings programSettings)
@@ -73,7 +168,7 @@ cv::Point3f findPuckCPU(cv::Mat &frame, Settings programSettings)
                  programSettings.houghParam1, programSettings.houghParam2,
                  programSettings.puckMinRadius, programSettings.puckMaxRadius);
 
-    if (circles.size() != 0)
+    if (circles.size() == 0)
     {
         return cv::Point3f(-1, -1, -1);
     }
@@ -92,7 +187,6 @@ cv::Point3f fingPuckGPU(cv::cuda::GpuMat frame, Settings programSettings)
                                                                                                programSettings.houghParam1, programSettings.houghParam2,
                                                                                                programSettings.puckMinRadius, programSettings.puckMaxRadius);
     gpuDetector->detect(frame, gpuResult);
-    //programSettings.getTrackbarsWindowName().toStdString()
     gpuCircles.resize(gpuResult.size().width);
     if (!gpuCircles.empty())
         gpuResult.row(0).download(cv::Mat(gpuCircles).reshape(3, 1));
@@ -142,30 +236,6 @@ std::vector<cv::Scalar> getSpeedVector(std::vector<cv::Point3f> &puckTrajectoryP
     temp = sumSpeed/(signed int)puckSpeedVector.size();
     puckAverageSpeed = cv::Scalar(temp.x, temp.y);
     return puckSpeedVector;
-
-//    int sumSpeed = 0;
-//    int speed;
-//    std::vector<int> Speed;
-//    if (coord == 'y')
-//    {
-//        for (uint8_t i = 1; i < Points.size(); i++)
-//        {
-//            speed = Points[i].y - Points[i - 1].y;
-//            Speed.push_back(speed);
-//            sumSpeed += speed;
-//        }
-//    }
-//    else if (coord == 'x')
-//    {
-//        for (uint8_t i = 1; i < Points.size(); i++)
-//        {
-//            speed = Points[i].x - Points[i - 1].x;
-//            Speed.push_back(speed);
-//            sumSpeed += speed;
-//        }
-//    }
-//    averageSpeed = sumSpeed/(signed int)Speed.size();
-//    return Speed;
 }
 
 bool checkDirectionChange(std::vector<cv::Scalar> puckSpeedVector)
@@ -180,22 +250,22 @@ bool checkDirectionChange(std::vector<cv::Scalar> puckSpeedVector)
 
     for (uint8_t i = 0; i < puckSpeedVector.size(); i++)
     {
-       if (puckSpeedVector[i][0] > 0)
-       {
-           positiveX++;
-       }
-       else if (puckSpeedVector[i][0] < 0)
-       {
-           negativeX++;
-       }
-       if (puckSpeedVector[i][1] > 0)
-       {
-           positiveY++;
-       }
-       else if (puckSpeedVector[i][1] < 0)
-       {
-           negativeY++;
-       }
+        if (puckSpeedVector[i][0] > 0)
+        {
+            positiveX++;
+        }
+        else if (puckSpeedVector[i][0] < 0)
+        {
+            negativeX++;
+        }
+        if (puckSpeedVector[i][1] > 0)
+        {
+            positiveY++;
+        }
+        else if (puckSpeedVector[i][1] < 0)
+        {
+            negativeY++;
+        }
     }
     return !(positiveX == 0 || negativeX == 0) || !(positiveY == 0 || negativeY == 0);
 }
@@ -233,8 +303,13 @@ int main()
     // General Mat ang GpuMat variables
     cv::VideoCapture camera;
     cv::Mat capturedFrame;
+    cv::Mat ROIFrame;
     cv::cuda::GpuMat GPUFrame;
     cv::Mat copiedFrame;
+    // For table rotation and positioning
+    cv::Rect ROI = cv::Rect(0, 0, 2048, 1088);
+    double frameRotationAngle = 0;
+    cv::Point frameRotationPoint = cv::Point(-1,-1);
     // For puck detection
     cv::Point3f puckPoint;
     // For trajectory extrapolation
@@ -249,10 +324,6 @@ int main()
     int countedFPS[255];
     for (uint8_t i = 0; i < 255; i++) {countedFPS[i] = 0;}
 
-    // For writing video
-    //cv::VideoWriter cleanOutput = VideoWriter(clearFname.toStdString(), -1, camera->get(CAP_PROP_FPS), S, false);
-    //cv::VideoWriter procOutput;
-
     // Load all required settings and initialize
     programSettings.Load();
     cv::namedWindow(VIDEO_WINDOW_NAME, cv::WINDOW_KEEPRATIO);
@@ -260,64 +331,80 @@ int main()
     setupCamera(camera, programSettings.getCameraAddress(), programSettings.getCameraResolution());
 
     while (true) {
-        startingTime = cv::getTickCount();
-        getCameraFrame(camera, capturedFrame);
-        capturedFrame.copyTo(copiedFrame);
-        puckPoint = findPuck(capturedFrame, GPUFrame, programSettings);
-
-
-        // If at least one puck was found
-        if (puckPoint.x != -1){
-            puckTrajectoryPointsVector.push_back(puckPoint);
-            if (puckTrajectoryPointsVector.size() < 2) {continue;}
-            puckSpeedVector = getSpeedVector(puckTrajectoryPointsVector, puckAverageSpeed);
-            if (checkDirectionChange(puckSpeedVector)) {puckTrajectoryPointsVector.clear();}
-            cv::circle(capturedFrame, cv::Point(puckPoint.x, puckPoint.y), puckPoint.z, cv::Scalar(255,255,255), 2);
-            //
-
-            //
-            skippedFramesNumber = 0;
-        } else
-        {
-            skippedFramesNumber++;
-            if (skippedFramesNumber > MAX_SKIPPED_FRAMES)
+        try {
+            startingTime = cv::getTickCount();
+            getCameraFrame(camera, capturedFrame);
+            capturedFrame.copyTo(copiedFrame);
+            if (frameRotationPoint.x != -1)
             {
-                //moveTo(Frame, HOMEPOINT);
-                puckTrajectoryPointsVector.clear();
+                rotateMatByAngle(capturedFrame, frameRotationAngle, frameRotationPoint);
+                ROIFrame = cv::Mat(capturedFrame, ROI);
             }
-        }
+            else
+            {
+                ROIFrame = capturedFrame;
+            }
 
-        // Ring puckTrajectoryPointsVector buffer overflow
-        if (puckTrajectoryPointsVector.size() == POINTS_VECTOR_LENGTH)
-        {
-            puckTrajectoryPointsVector.erase(puckTrajectoryPointsVector.begin());
-        }
+            puckPoint = findPuck(ROIFrame, GPUFrame, programSettings);
 
-        fps = cv::getTickFrequency() / (cv::getTickCount() - startingTime);
-        addFPSValue(countedFPS, fps);
-        averageFPS = calculateAverageFPS(countedFPS);
-        cv::putText(capturedFrame, std::to_string(averageFPS), cv::Point(20,20), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255,0,0));
+            // If at least one puck was found
+            if (puckPoint.x != -1){
+                puckTrajectoryPointsVector.push_back(puckPoint);
+                if (puckTrajectoryPointsVector.size() < 2) {continue;}
+                puckSpeedVector = getSpeedVector(puckTrajectoryPointsVector, puckAverageSpeed);
+                if (checkDirectionChange(puckSpeedVector)) {puckTrajectoryPointsVector.clear();}
+                cv::circle(ROIFrame, cv::Point(puckPoint.x, puckPoint.y), puckPoint.z, cv::Scalar(255,255,255), 2);
+                //
 
-        cv::imshow(VIDEO_WINDOW_NAME, capturedFrame);
-        char pressedKey = cv::waitKey(1);
-        switch (pressedKey) {
-        case 'h':
-            showInfo(programSettings);
-            break;
-        case 'q':
-            camera.release();
-            return 0;
-        case 's':
-            programSettings.Save();
-            qDebug() << "Settings were successfully saved";
-            break;
-        case 'l':
-            programSettings.Load();
-            cv::destroyWindow(TRACKBARS_NAME);
-            setupTrackbarsWindow(programSettings);
-            qDebug() << "Settings were successfully loaded";
-            break;
-        }
+                //
+                skippedFramesNumber = 0;
+            } else
+            {
+                skippedFramesNumber++;
+                if (skippedFramesNumber > MAX_SKIPPED_FRAMES)
+                {
+                    //moveTo(Frame, HOMEPOINT);
+                    puckTrajectoryPointsVector.clear();
+                }
+            }
+
+            // Ring puckTrajectoryPointsVector buffer overflow
+            if (puckTrajectoryPointsVector.size() == POINTS_VECTOR_LENGTH)
+            {
+                puckTrajectoryPointsVector.erase(puckTrajectoryPointsVector.begin());
+            }
+
+            cv::cvtColor(ROIFrame, ROIFrame, cv::COLOR_GRAY2RGB);
+
+            fps = cv::getTickFrequency() / (cv::getTickCount() - startingTime);
+            addFPSValue(countedFPS, fps);
+            averageFPS = calculateAverageFPS(countedFPS);
+            cv::putText(ROIFrame, std::to_string(averageFPS), cv::Point(80,80), cv::FONT_HERSHEY_COMPLEX, 4, CV_COLOR_GREEN);
+
+            cv::imshow(VIDEO_WINDOW_NAME, ROIFrame);
+            char pressedKey = cv::waitKey(1);
+            switch (pressedKey) {
+            case 'c':
+                ROI = detectTableBorders(copiedFrame, frameRotationAngle, frameRotationPoint);
+                break;
+            case 'h':
+                showInfo(programSettings);
+                break;
+            case 'q':
+                camera.release();
+                return 0;
+            case 's':
+                programSettings.Save();
+                qDebug() << "Settings were successfully saved";
+                break;
+            case 'l':
+                programSettings.Load();
+                cv::destroyWindow(TRACKBARS_NAME);
+                setupTrackbarsWindow(programSettings);
+                qDebug() << "Settings were successfully loaded";
+                break;
+            }
+        } catch(_exception e){}
     }
     return 0;
 }
@@ -328,7 +415,7 @@ int main()
 //cv::createTrackbar("p2", TRACKBARS_NAME, &p2, 255);
 //cv::createTrackbar("min", TRACKBARS_NAME, &minRadius, 500);
 //cv::createTrackbar("max", TRACKBARS_NAME, &maxRadius, 500);
-//cv::createTrackbar("MINY", TRACKBARS_NAME, &MINY, 2050);
+//cv::createTrackbar("MINY",q TRACKBARS_NAME, &MINY, 2050);
 //cv::createTrackbar("MAXY", TRACKBARS_NAME, &MAXY, 2050);
 //cv::createTrackbar("ENDLINE", TRACKBARS_NAME, &ENDLINE, 2050);
 //cv::createTrackbar("WORKING_DELTA", TRACKBARS_NAME, &WORKING_DELTA, 1024);
