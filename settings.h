@@ -26,10 +26,14 @@ public:
     Settings();
     void Save();
     void Load();
+    // Variables for UI
     int houghParam1;
     int houghParam2;
     int puckMinRadius;
     int puckMaxRadius;
+    int robotStrikerPosition;
+    int robotMotionRange;
+    // Getters and Setters
     QSize getCameraResolution() const;
     void setCameraResolution(const QSize &value);
     int getCameraAddress() const;
@@ -58,6 +62,10 @@ public:
     void setTableROIPoint1(QPoint newTableROIPoint1);
     QPoint getTableROIPoint2() const;
     void setTableROIPoint2(QPoint newTableROIPoint2);
+    int getRobotStrikerPosition() const;
+    void setRobotStrikerPosition(int newRobotStrikerPosition);
+    int getRobotMotionRange() const;
+    void setRobotMotionRange(int newRobotMotionRange);
 };
 
 

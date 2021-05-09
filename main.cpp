@@ -18,6 +18,9 @@
 #define MAX_SKIPPED_FRAMES programSettings.getMaxSkippedFrames()
 #define POINTS_VECTOR_LENGTH programSettings.getPointsVectorLength()
 
+#define ROBOT_STRIKER_POSITION programSettings.getRobotStrikerPosition()
+#define MAX_ROBOT_REACH programSettings.getRobotStrikerPosition() - programSettings.getRobotMotionRange()
+
 #define pi 3.141592653589793238463
 
 #define CV_COLOR_GREEN cv::Scalar(0,255,0)
@@ -124,6 +127,12 @@ void setupTrackbarsWindow(Settings &programSettings)
     cv::createTrackbar("houghParam2", TRACKBARS_NAME, &programSettings.houghParam2, 1024);
     cv::createTrackbar("puckMinRadius", TRACKBARS_NAME, &programSettings.puckMinRadius, 500);
     cv::createTrackbar("puckMaxRadius", TRACKBARS_NAME, &programSettings.puckMaxRadius, 500);
+    cv::createTrackbar("robotStrikerPosition", TRACKBARS_NAME,
+                       &programSettings.robotStrikerPosition,
+                       programSettings.getCameraResolution().width());
+    cv::createTrackbar("robotMotionRange", TRACKBARS_NAME,
+                       &programSettings.robotMotionRange,
+                       programSettings.getCameraResolution().width());
 }
 
 void showInfo(Settings programSettings)
@@ -219,11 +228,11 @@ cv::Point3f findPuck(cv::Mat &capturedFrame, cv::cuda::GpuMat &GPUFrame, Setting
     return puckPoint;
 }
 
-std::vector<cv::Scalar> getSpeedVector(std::vector<cv::Point3f> &puckTrajectoryPointsVector, cv::Scalar &puckAverageSpeed)
+std::vector<cv::Scalar> getSpeedVector(std::vector<cv::Point> &puckTrajectoryPointsVector, cv::Scalar &puckAverageSpeed)
 {
     cv::Scalar speed;
-    cv::Point3f sumSpeed;
-    cv::Point3f temp;
+    cv::Point sumSpeed;
+    cv::Point temp;
     std::vector<cv::Scalar> puckSpeedVector;
 
     for (int i = 1; i < puckTrajectoryPointsVector.size(); i++)
@@ -270,6 +279,72 @@ bool checkDirectionChange(std::vector<cv::Scalar> puckSpeedVector)
     return !(positiveX == 0 || negativeX == 0) || !(positiveY == 0 || negativeY == 0);
 }
 
+cv::Vec2f getExtrapolationCoefficients(const std::vector<cv::Point> &pointsVector)
+{
+    int sumy = 0, sumx = 0, sumx2 = 0, sumxy = 0;
+    float n = pointsVector.size(), a, b;
+
+    for (int i = 0; i < n; i++)
+    {
+        sumy += pointsVector[i].y;
+        sumx += pointsVector[i].x;
+        sumx2 += pointsVector[i].x*pointsVector[i].x;
+        sumxy += pointsVector[i].x*pointsVector[i].y;
+    }
+
+    a = (sumxy - (sumx*sumy/n))/(sumx2 - sumx*sumx/n);
+    b = (sumy - a*sumx)/n;
+
+    return cv::Vec2f(a, b);
+}
+
+bool in_Range(int x, int a, int b)
+{
+    return (x >= a)&&(x <= b);
+}
+
+cv::Point predictPosition(std::vector<cv::Point> &puckTrajectoryPointsVector,
+                          int predictionPointX,
+                          cv::Vec2f extrapolationCoefficients,
+                          cv::Size frameSize)
+{
+    if (puckTrajectoryPointsVector.size() < 2){return cv::Point(-1, -1);}
+
+    float a = extrapolationCoefficients[0], b = extrapolationCoefficients[1]; // for simplier using
+    int predictionPointY, newx = predictionPointX, hitCount = 0;
+    cv::Point cp = puckTrajectoryPointsVector[puckTrajectoryPointsVector.size()-1];
+    cv::Point lp = puckTrajectoryPointsVector[puckTrajectoryPointsVector.size()-2];
+
+    do
+    {
+        predictionPointY = a*predictionPointX + b;
+        if (!in_Range(predictionPointY, 0, frameSize.height))
+        {
+            hitCount++;
+             if (a > 0)
+             {
+                 newx = (frameSize.height-b)/a;
+                 a = -a;
+                 b = frameSize.height-a*newx;
+             } else
+             {
+                 newx = (0-b)/a;
+                 a = -a;
+                 b = 0-a*newx;
+             }
+             lp = cp;
+             cp = cv::Point(newx, predictionPointY);
+
+             if (hitCount > 5){return cv::Point(-1, -1);}
+        }
+        else
+        {
+            if (hitCount >= 2){return cv::Point(-1, -1);}
+            return cv::Point(predictionPointX, predictionPointY);
+        }
+    } while(true);
+}
+
 void addFPSValue(int *FPSArray, int FPS)
 {
     for (uint8_t i = 1; i < 255; i++)
@@ -306,6 +381,7 @@ int main()
     cv::Mat ROIFrame;
     cv::cuda::GpuMat GPUFrame;
     cv::Mat copiedFrame;
+    cv::Size ROIFrameSize;
     // For table rotation and positioning
     cv::Rect ROI = cv::Rect(0, 0, 2048, 1088);
     double frameRotationAngle = 0;
@@ -314,7 +390,7 @@ int main()
     cv::Point3f puckPoint;
     // For trajectory extrapolation
     int skippedFramesNumber = 0;
-    std::vector<cv::Point3f> puckTrajectoryPointsVector;
+    std::vector<cv::Point> puckTrajectoryPointsVector;
     std::vector<cv::Scalar> puckSpeedVector;
     cv::Scalar puckAverageSpeed;
     // For performance counter
@@ -323,7 +399,10 @@ int main()
     int averageFPS;
     int countedFPS[255];
     for (uint8_t i = 0; i < 255; i++) {countedFPS[i] = 0;}
-
+    // For puck processing
+    cv::Vec2f extrapolationCoefficients;
+    cv::Point predictedPointRSP;
+    cv::Point predictedPointMRR;
     // Load all required settings and initialize
     programSettings.Load();
     cv::namedWindow(VIDEO_WINDOW_NAME, cv::WINDOW_KEEPRATIO);
@@ -331,7 +410,6 @@ int main()
     setupCamera(camera, programSettings.getCameraAddress(), programSettings.getCameraResolution());
 
     while (true) {
-        try {
             startingTime = cv::getTickCount();
             getCameraFrame(camera, capturedFrame);
             capturedFrame.copyTo(copiedFrame);
@@ -344,18 +422,39 @@ int main()
             {
                 ROIFrame = capturedFrame;
             }
+            ROIFrameSize = cv::Size(ROIFrame.cols, ROIFrame.rows);
 
             puckPoint = findPuck(ROIFrame, GPUFrame, programSettings);
 
             // If at least one puck was found
             if (puckPoint.x != -1){
-                puckTrajectoryPointsVector.push_back(puckPoint);
+                puckTrajectoryPointsVector.push_back(cv::Point(puckPoint.x, puckPoint.y));
                 if (puckTrajectoryPointsVector.size() < 2) {continue;}
                 puckSpeedVector = getSpeedVector(puckTrajectoryPointsVector, puckAverageSpeed);
                 if (checkDirectionChange(puckSpeedVector)) {puckTrajectoryPointsVector.clear();}
-                cv::circle(ROIFrame, cv::Point(puckPoint.x, puckPoint.y), puckPoint.z, cv::Scalar(255,255,255), 2);
-                //
+                //predictedPointRSP;
+                extrapolationCoefficients = getExtrapolationCoefficients(puckTrajectoryPointsVector);
+                predictedPointRSP = predictPosition(puckTrajectoryPointsVector, MAX_ROBOT_REACH,
+                                                    extrapolationCoefficients, ROIFrameSize);
+                // Check puck direction
+                if (puckSpeedVector[puckSpeedVector.size()-1][0] > 0)
+                {
+                    // Puck direction forward
+                    if (puckPoint.x < MAX_ROBOT_REACH)
+                    { // We need to reflect puck
 
+                    } else
+                    { // We need to attack puck
+
+                    }
+                } else
+                {
+                    // Puck direction backward
+                    if (puckPoint.x < MAX_ROBOT_REACH)
+                    { // We need to attack puck
+
+                    } // No else, because we don't care if puck moves backward and we can't reach it
+                }
                 //
                 skippedFramesNumber = 0;
             } else
@@ -374,14 +473,30 @@ int main()
                 puckTrajectoryPointsVector.erase(puckTrajectoryPointsVector.begin());
             }
 
-            cv::cvtColor(ROIFrame, ROIFrame, cv::COLOR_GRAY2RGB);
-
             fps = cv::getTickFrequency() / (cv::getTickCount() - startingTime);
             addFPSValue(countedFPS, fps);
             averageFPS = calculateAverageFPS(countedFPS);
-            cv::putText(ROIFrame, std::to_string(averageFPS), cv::Point(80,80), cv::FONT_HERSHEY_COMPLEX, 4, CV_COLOR_GREEN);
 
+            cv::cvtColor(ROIFrame, ROIFrame, cv::COLOR_GRAY2RGB);
+            if (puckPoint.x != -1){cv::circle(ROIFrame, cv::Point(puckPoint.x, puckPoint.y), puckPoint.z, CV_COLOR_GREEN, 2);}
+            for (uint i = 0; i < puckTrajectoryPointsVector.size(); i++){cv::drawMarker(ROIFrame, puckTrajectoryPointsVector[i], CV_COLOR_BLUE);}
+            cv::line(ROIFrame,
+                     cv::Point(ROBOT_STRIKER_POSITION,0),
+                     cv::Point(ROBOT_STRIKER_POSITION,ROIFrameSize.height),
+                     CV_COLOR_BLUE, 2);
+            cv::line(ROIFrame,
+                     cv::Point(MAX_ROBOT_REACH,0),
+                     cv::Point(MAX_ROBOT_REACH, ROIFrameSize.height),
+                     CV_COLOR_BLUE, 2);
+            if (predictedPointRSP.x != -1){cv::circle(ROIFrame, predictedPointRSP, 20, CV_COLOR_WHITE);}
+//            cv::line(ROIFrame, cv::Point(0, extrapolationCoefficients[0]*0 + extrapolationCoefficients[1]),
+//                    cv::Point(ROIFrameSize.width, extrapolationCoefficients[0]*ROIFrameSize.width + extrapolationCoefficients[1]),
+//                    CV_COLOR_BLUE, 2);
+//            cv::line(ROIFrame, cv::Point(puckPoint.x, puckPoint.y),
+//                    predictedPointRSP, CV_COLOR_BLUE, 2);
+            cv::putText(ROIFrame, std::to_string(averageFPS), cv::Point(80,80), cv::FONT_HERSHEY_SIMPLEX, 4, CV_COLOR_GREEN);
             cv::imshow(VIDEO_WINDOW_NAME, ROIFrame);
+
             char pressedKey = cv::waitKey(1);
             switch (pressedKey) {
             case 'c':
@@ -404,7 +519,6 @@ int main()
                 qDebug() << "Settings were successfully loaded";
                 break;
             }
-        } catch(_exception e){}
     }
     return 0;
 }

@@ -179,6 +179,11 @@ void Settings::Save()
     settings->setValue("points_vector_length", pointsVectorLength);
     settings->endGroup();
 
+    settings->beginGroup("Game_strategy");
+    settings->setValue("robot_striker_position", robotStrikerPosition);
+    settings->setValue("robot_motion_range", robotMotionRange);
+    settings->endGroup();
+
     settings->sync();
 }
 
@@ -212,7 +217,30 @@ void Settings::Load()
     setMaxSkippedFrames(settings->value("max_skipped_frames", 10).toInt());
     setPointsVectorLength(settings->value("points_vector_length", 10).toInt());
     settings->endGroup();
-    setTableROIPoint2(QPoint(cameraResolution.width(), cameraResolution.height()));
 
+    settings->beginGroup("Game_strategy");
+    setRobotStrikerPosition(settings->value("robot_striker_position", 0).toInt());
+    setRobotMotionRange(settings->value("robot_motion_range", 0).toInt());
+    settings->endGroup();
+}
+
+int Settings::getRobotMotionRange() const
+{
+    return robotMotionRange;
+}
+
+void Settings::setRobotMotionRange(int newRobotMotionRange)
+{
+    robotMotionRange = newRobotMotionRange;
+}
+
+int Settings::getRobotStrikerPosition() const
+{
+    return robotStrikerPosition;
+}
+
+void Settings::setRobotStrikerPosition(int newRobotStrikerPosition)
+{
+    robotStrikerPosition = newRobotStrikerPosition;
 }
 //int param1, int param2, int minRadius, int maxRadius
