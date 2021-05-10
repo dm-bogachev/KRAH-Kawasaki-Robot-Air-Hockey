@@ -11,15 +11,25 @@ CONFIG -= app_bundle
 win32:RC_ICONS += icon.ico
 
 SOURCES += \
+        cvgui.cpp \
+        framegrabber.cpp \
         main.cpp \
         performance.cpp \
-        settings.cpp
+        positionpredictor.cpp \
+        puckdetector.cpp \
+        settings.cpp \
+        trectdetector.cpp
 
 
 HEADERS += \
+    cvgui.h \
+    framegrabber.h \
     performance.h \
+    positionpredictor.h \
+    puckdetector.h \
     settings.h \
-    sortcvpoints.h
+    sortcvpoints.h \
+    trectdetector.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

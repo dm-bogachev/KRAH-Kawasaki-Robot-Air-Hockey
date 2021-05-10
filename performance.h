@@ -3,7 +3,7 @@
 
 #include <opencv2/core.hpp>
 
-#define FPS_COUNTER_MAX_SIZE 16
+#define FPS_COUNTER_MAX_SIZE 32
 
 class Performance
 {
