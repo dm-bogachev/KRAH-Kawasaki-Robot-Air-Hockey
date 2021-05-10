@@ -8,13 +8,18 @@ CONFIG -= app_bundle
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+win32:RC_ICONS += icon.ico
+
 SOURCES += \
         main.cpp \
+        performance.cpp \
         settings.cpp
 
 
 HEADERS += \
-    settings.h
+    performance.h \
+    settings.h \
+    sortcvpoints.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

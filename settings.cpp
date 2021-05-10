@@ -110,34 +110,14 @@ void Settings::setPointsVectorLength(int newPointsArrayLength)
     pointsVectorLength = newPointsArrayLength;
 }
 
-int Settings::getImageRotationAngle() const
+double Settings::getImageRotationAngle() const
 {
-    return imageRotationAngle;
+    return cvImageRotationAngle;
 }
 
-void Settings::setImageRotationAngle(int newImageRotationAngle)
+void Settings::setImageRotationAngle(double newImageRotationAngle)
 {
-    imageRotationAngle = newImageRotationAngle;
-}
-
-QPoint Settings::getTableROIPoint1() const
-{
-    return tableROIPoint1;
-}
-
-void Settings::setTableROIPoint1(QPoint newTableROIPoint1)
-{
-    tableROIPoint1 = newTableROIPoint1;
-}
-
-QPoint Settings::getTableROIPoint2() const
-{
-    return tableROIPoint2;
-}
-
-void Settings::setTableROIPoint2(QPoint newTableROIPoint2)
-{
-    tableROIPoint2 = newTableROIPoint2;
+    cvImageRotationAngle = newImageRotationAngle;
 }
 
 Settings::Settings()
@@ -157,9 +137,10 @@ void Settings::Save()
     settings->endGroup();
 
     settings->beginGroup("Environment_options");
-    settings->setValue("image_rotation_angle", imageRotationAngle);
-    settings->setValue("table_roi_point_1", tableROIPoint1);
-    settings->setValue("table_roi_point_2", tableROIPoint2);
+    settings->setValue("image_rotation_angle", cvImageRotationAngle);
+    settings->setValue("image_roi_rect", QRect(cvImageROIRect.x, cvImageROIRect.y,
+                                               cvImageROIRect.width, cvImageROIRect.height));
+    settings->setValue("image_rotation_point", QPoint(cvImageRotationPoint.x, cvImageROIRect.y));
     settings->endGroup();
 
     settings->beginGroup("Camera_properties");
@@ -196,9 +177,11 @@ void Settings::Load()
     settings->endGroup();
 
     settings->beginGroup("Environment_options");
-    setImageRotationAngle(settings->value("image_rotation_angle", 0).toInt());
-    setTableROIPoint1(settings->value("table_roi_point_1", QPoint(0,0)).toPoint());
-    setTableROIPoint2(settings->value("table_roi_point_2", QPoint(cameraResolution.width(), cameraResolution.height())).toPoint());
+    setImageRotationAngle(settings->value("image_rotation_angle", 0).toFloat());
+    QRect tmpRect = settings->value("image_roi_rect", QRect(0,0,1024,588)).toRect();
+    cvImageROIRect = cv::Rect(tmpRect.x(), tmpRect.y(), tmpRect.width(), tmpRect.height());
+    QPoint tmpPoint = settings->value("image_rotation_point", QPoint(-1,-1)).toPoint();
+    cvImageRotationPoint = cv::Point(tmpPoint.x(), tmpPoint.y());
     settings->endGroup();
 
     settings->beginGroup("Camera_properties");
@@ -243,4 +226,3 @@ void Settings::setRobotStrikerPosition(int newRobotStrikerPosition)
 {
     robotStrikerPosition = newRobotStrikerPosition;
 }
-//int param1, int param2, int minRadius, int maxRadius

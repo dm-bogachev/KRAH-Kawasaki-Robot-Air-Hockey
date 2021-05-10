@@ -10,6 +10,8 @@
 #include <opencv2/cudawarping.hpp>
 
 #include <settings.h>
+#include <performance.h>
+#include <sortcvpoints.h>
 
 #define GPU_ACCELERATION programSettings.getGPUAcceleration()
 
@@ -22,6 +24,8 @@
 #define ROBOT_STRIKER_POSITION programSettings.getRobotStrikerPosition()
 #define MAX_ROBOT_REACH programSettings.getRobotStrikerPosition() - programSettings.getRobotMotionRange()
 
+#define PUCK_SPEED_SLOW 20
+
 #define pi 3.141592653589793238463
 
 #define CV_COLOR_GREEN cv::Scalar(0,255,0)
@@ -29,16 +33,6 @@
 #define CV_COLOR_BLUE cv::Scalar(0,0,255)
 #define CV_COLOR_WHITE cv::Scalar(255,255,255)
 #define CV_COLOR_BLACK cv::Scalar(0,0,0)
-
-#define FPS_COUNTER_MAX_SIZE 16
-
-struct pointsSortingStructure
-{
-    inline bool operator() (const cv::Point2f& struct1, const cv::Point2f& struct2)
-    {
-        return struct1.x*struct1.x + struct1.y*struct1.y < struct2.x*struct2.x + struct2.y*struct2.y;
-    }
-};
 
 cv::Point2f getRectangleCenter(std::vector<cv::Point2f> rectangleCorners)
 {
@@ -112,16 +106,16 @@ void rotateMatByAngleGPU(cv::cuda::GpuMat &gpuMat, double angleDeg, cv::Point2f 
     cv::cuda::warpAffine(gpuMat, gpuMat, rot, bbox.size());
 }
 
-void rotateMatByAngle(cv::Mat &mat, double angleDeg, cv::Point2f rotationPoint, Settings programSettings)
+void rotateMatByAngle(cv::Mat &mat, Settings programSettings)
 {
     cv::cuda::GpuMat gpuMat;
     if (GPU_ACCELERATION)
     {
         gpuMat.upload(mat);
-        rotateMatByAngleGPU(gpuMat, angleDeg, rotationPoint);
+        rotateMatByAngleGPU(gpuMat, programSettings.cvImageRotationAngle, programSettings.cvImageRotationPoint);
         gpuMat.download(mat);
     } else {
-        rotateMatByAngleCPU(mat, angleDeg, rotationPoint);
+        rotateMatByAngleCPU(mat, programSettings.cvImageRotationAngle, programSettings.cvImageRotationPoint);
     }
 }
 
@@ -374,31 +368,6 @@ cv::Point predictPosition(std::vector<cv::Point> &puckTrajectoryPointsVector,
     } while(true);
 }
 
-void addFPSValue(int *FPSArray, int FPS)
-{
-    for (int i = 1; i < FPS_COUNTER_MAX_SIZE; i++)
-    {
-        FPSArray[i-1] = FPSArray[i];
-    }
-    FPSArray[FPS_COUNTER_MAX_SIZE-1] = int(FPS);
-}
-
-int calculateAverageFPS(const int *countedFPS)//[255])
-{
-    int nonzero = 0;
-    int sum = 0;
-    for (int i = 0; i < FPS_COUNTER_MAX_SIZE; i++)
-    {
-        if (countedFPS[i] != 0)
-        {
-            sum += countedFPS[i];
-            nonzero++;
-        }
-    }
-    if (nonzero != 0) return sum/nonzero;
-    return 0;
-}
-
 int main()
 {
     // Define all variables
@@ -411,10 +380,6 @@ int main()
     cv::cuda::GpuMat GPUFrame;
     cv::Mat copiedFrame;
     cv::Size ROIFrameSize;
-    // For table rotation and positioning
-    cv::Rect ROI = cv::Rect(0, 0, 2048, 1088);
-    double frameRotationAngle = 0;
-    cv::Point frameRotationPoint = cv::Point(-1,-1);
     // For puck detection
     cv::Point3f puckPoint;
     // For trajectory extrapolation
@@ -423,11 +388,7 @@ int main()
     std::vector<cv::Scalar> puckSpeedVector;
     cv::Scalar puckAverageSpeed;
     // For performance counter
-    int fps;
-    int64 startingTime;
-    int averageFPS;
-    int countedFPS[FPS_COUNTER_MAX_SIZE];
-    for (int i = 0; i < FPS_COUNTER_MAX_SIZE; i++) {countedFPS[i] = 0;}
+    Performance FPSCounter;
     // For puck processing
     cv::Vec2f extrapolationCoefficients;
     cv::Point predictedPointRSP;
@@ -439,13 +400,13 @@ int main()
     setupCamera(camera, programSettings.getCameraAddress(), programSettings.getCameraResolution());
 
     while (true) {
-            startingTime = cv::getTickCount();
+            FPSCounter.resetCounter();
             getCameraFrame(camera, capturedFrame);
             capturedFrame.copyTo(copiedFrame);
-            if (frameRotationPoint.x != -1)
+            if (programSettings.cvImageRotationPoint.x != -1)
             {
-                rotateMatByAngle(capturedFrame, frameRotationAngle, frameRotationPoint, programSettings);
-                ROIFrame = cv::Mat(capturedFrame, ROI);
+                rotateMatByAngle(capturedFrame, programSettings);
+                ROIFrame = cv::Mat(capturedFrame, programSettings.cvImageROIRect);
             }
             else
             {
@@ -461,15 +422,17 @@ int main()
                 if (puckTrajectoryPointsVector.size() < 2) {continue;}
                 puckSpeedVector = getSpeedVector(puckTrajectoryPointsVector, puckAverageSpeed);
                 if (checkDirectionChange(puckSpeedVector)) {puckTrajectoryPointsVector.clear();}
-                //predictedPointRSP;
+
                 extrapolationCoefficients = getExtrapolationCoefficients(puckTrajectoryPointsVector);
-                predictedPointRSP = predictPosition(puckTrajectoryPointsVector, MAX_ROBOT_REACH,
+                predictedPointRSP = predictPosition(puckTrajectoryPointsVector, ROBOT_STRIKER_POSITION,
+                                                    extrapolationCoefficients, ROIFrameSize);
+                predictedPointMRR = predictPosition(puckTrajectoryPointsVector, MAX_ROBOT_REACH,
                                                     extrapolationCoefficients, ROIFrameSize);
                 // Check puck direction
                 if (puckSpeedVector[puckSpeedVector.size()-1][0] > 0)
                 {
                     // Puck direction forward
-                    if (puckPoint.x < MAX_ROBOT_REACH)
+                    if (puckPoint.x > MAX_ROBOT_REACH)
                     { // We need to reflect puck
 
                     } else
@@ -479,10 +442,21 @@ int main()
                 } else
                 {
                     // Puck direction backward
-                    if (puckPoint.x < MAX_ROBOT_REACH)
+                    if (puckPoint.x > MAX_ROBOT_REACH)
                     { // We need to attack puck
+                        qDebug() << "Average speed" << puckAverageSpeed[0];
+                        if (abs(puckAverageSpeed[0]) < PUCK_SPEED_SLOW)
+                        { // Puck is slow enough to hit
+                            qDebug() << "Puck Stage 3.1" << "Robot will attack and return home";
+                        } else
+                        { // Puck is fast enough to hit
+                            qDebug() << "Puck Stage 3.2" << "Robot will return in home position safe";;
+                        }
 
-                    } // No else, because we don't care if puck moves backward and we can't reach it
+                    } else
+                    {
+                        qDebug() << "Puck State 4" << "Robot will return in home position";
+                    }// No else, because we don't care if puck moves backward and we can't reach it
                 }
                 //
                 skippedFramesNumber = 0;
@@ -502,10 +476,7 @@ int main()
                 puckTrajectoryPointsVector.erase(puckTrajectoryPointsVector.begin());
             }
 
-            fps = cv::getTickFrequency() / (cv::getTickCount() - startingTime);
-            addFPSValue(countedFPS, fps);
-            averageFPS = calculateAverageFPS(countedFPS);
-
+            FPSCounter.stopCounter();
             cv::cvtColor(ROIFrame, ROIFrame, cv::COLOR_GRAY2RGB);
             if (puckPoint.x != -1){cv::circle(ROIFrame, cv::Point(puckPoint.x, puckPoint.y), puckPoint.z, CV_COLOR_GREEN, 2);}
             for (uint i = 0; i < puckTrajectoryPointsVector.size(); i++){cv::drawMarker(ROIFrame, puckTrajectoryPointsVector[i], CV_COLOR_BLUE);}
@@ -523,13 +494,15 @@ int main()
 //                    CV_COLOR_BLUE, 2);
 //            cv::line(ROIFrame, cv::Point(puckPoint.x, puckPoint.y),
 //                    predictedPointRSP, CV_COLOR_BLUE, 2);
-            cv::putText(ROIFrame, std::to_string(averageFPS), cv::Point(80,80), cv::FONT_HERSHEY_SIMPLEX, 4, CV_COLOR_GREEN);
+            cv::putText(ROIFrame, std::to_string(FPSCounter.getAverageFPS()), cv::Point(80,80), cv::FONT_HERSHEY_SIMPLEX, 1, CV_COLOR_GREEN);
             cv::imshow(VIDEO_WINDOW_NAME, ROIFrame);
 
             char pressedKey = cv::waitKey(1);
             switch (pressedKey) {
             case 'c':
-                ROI = detectTableBorders(copiedFrame, frameRotationAngle, frameRotationPoint);
+                programSettings.cvImageROIRect = detectTableBorders(copiedFrame,
+                                                                    programSettings.cvImageRotationAngle,
+                                                                    programSettings.cvImageRotationPoint);
                 break;
             case 'h':
                 showInfo(programSettings);

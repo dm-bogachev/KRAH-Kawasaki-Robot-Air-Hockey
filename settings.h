@@ -2,8 +2,11 @@
 #define SETTINGS_H
 
 #include <QSize>
+#include <QRect>
 #include <QSettings>
 #include <QFileInfo>
+
+#include <opencv2/core.hpp>
 
 #define CONFIG_FILE_NAME "krah.ini"
 
@@ -11,16 +14,13 @@ class Settings
 {
 private:
     QSettings *settings;
-    bool GPUAcceleration; // Not important
+    bool GPUAcceleration;
     QString videoWindowName;
     QString trackbarsWindowName;
     int cameraAddress;
     QSize cameraResolution;
     int maxSkippedFrames;
     int pointsVectorLength;
-    int imageRotationAngle;
-    QPoint tableROIPoint1;
-    QPoint tableROIPoint2;
 
 public:
     Settings();
@@ -33,6 +33,9 @@ public:
     int puckMaxRadius;
     int robotStrikerPosition;
     int robotMotionRange;
+    cv::Point cvImageRotationPoint;
+    cv::Rect cvImageROIRect;
+    double cvImageRotationAngle;
     // Getters and Setters
     QSize getCameraResolution() const;
     void setCameraResolution(const QSize &value);
@@ -56,16 +59,14 @@ public:
     void setMaxSkippedFrames(int newMaxSkippedFrame);
     int getPointsVectorLength() const;
     void setPointsVectorLength(int newPointsArrayLength);
-    int getImageRotationAngle() const;
-    void setImageRotationAngle(int newImageRotationAngle);
-    QPoint getTableROIPoint1() const;
-    void setTableROIPoint1(QPoint newTableROIPoint1);
-    QPoint getTableROIPoint2() const;
-    void setTableROIPoint2(QPoint newTableROIPoint2);
+    double getImageRotationAngle() const;
+    void setImageRotationAngle(double newImageRotationAngle);
     int getRobotStrikerPosition() const;
     void setRobotStrikerPosition(int newRobotStrikerPosition);
     int getRobotMotionRange() const;
     void setRobotMotionRange(int newRobotMotionRange);
+    cv::Point getImageRotationPoint() const;
+    void setImageRotationPoint(cv::Point newImageRotationPoint);
 };
 
 
