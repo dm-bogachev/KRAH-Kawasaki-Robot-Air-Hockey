@@ -7,6 +7,7 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/cudaimgproc.hpp>
+#include <opencv2/cudawarping.hpp>
 
 #include <settings.h>
 
@@ -28,6 +29,8 @@
 #define CV_COLOR_BLUE cv::Scalar(0,0,255)
 #define CV_COLOR_WHITE cv::Scalar(255,255,255)
 #define CV_COLOR_BLACK cv::Scalar(0,0,0)
+
+#define FPS_COUNTER_MAX_SIZE 16
 
 struct pointsSortingStructure
 {
@@ -83,7 +86,7 @@ double getImageRotationAngle(std::vector<cv::Point> markerCenters)
     return rotationAngleRad*180/pi;
 }
 
-void rotateMatByAngle(cv::Mat &mat, double angleDeg, cv::Point2f rotationPoint)
+void rotateMatByAngleCPU(cv::Mat &mat, double angleDeg, cv::Point2f rotationPoint)
 {
     // Get rotation matrix for rotating the image around its center in pixel coordinates
     cv::Point2f center((mat.cols-1)/2.0, (mat.rows-1)/2.0);
@@ -94,6 +97,32 @@ void rotateMatByAngle(cv::Mat &mat, double angleDeg, cv::Point2f rotationPoint)
     rot.at<double>(0,2) += bbox.width/2.0 - mat.cols/2.0;
     rot.at<double>(1,2) += bbox.height/2.0 - mat.rows/2.0;
     cv::warpAffine(mat, mat, rot, bbox.size());
+}
+
+void rotateMatByAngleGPU(cv::cuda::GpuMat &gpuMat, double angleDeg, cv::Point2f rotationPoint)
+{
+    // Get rotation matrix for rotating the image around its center in pixel coordinates
+    cv::Point2f center((gpuMat.cols-1)/2.0, (gpuMat.rows-1)/2.0);
+    cv::Mat rot = cv::getRotationMatrix2D(rotationPoint, angleDeg, 1.0);
+    // Determine bounding rectangle, center not relevant
+    cv::Rect2f bbox = cv::RotatedRect(cv::Point2f(), gpuMat.size(), angleDeg).boundingRect2f();
+    // Adjust transformation matrix
+    rot.at<double>(0,2) += bbox.width/2.0 - gpuMat.cols/2.0;
+    rot.at<double>(1,2) += bbox.height/2.0 - gpuMat.rows/2.0;
+    cv::cuda::warpAffine(gpuMat, gpuMat, rot, bbox.size());
+}
+
+void rotateMatByAngle(cv::Mat &mat, double angleDeg, cv::Point2f rotationPoint, Settings programSettings)
+{
+    cv::cuda::GpuMat gpuMat;
+    if (GPU_ACCELERATION)
+    {
+        gpuMat.upload(mat);
+        rotateMatByAngleGPU(gpuMat, angleDeg, rotationPoint);
+        gpuMat.download(mat);
+    } else {
+        rotateMatByAngleCPU(mat, angleDeg, rotationPoint);
+    }
 }
 
 cv::Rect detectTableBorders(cv::Mat &frame, double &frameRotationAngle, cv::Point &frameRotationPoint)
@@ -107,7 +136,7 @@ cv::Rect detectTableBorders(cv::Mat &frame, double &frameRotationAngle, cv::Poin
     {
         markerCenters = getArucoMarkersCenters(markerCorners);
         frameRotationAngle = getImageRotationAngle(markerCenters);
-        rotateMatByAngle(frame, frameRotationAngle, markerCenters[0]);
+        rotateMatByAngleCPU(frame, frameRotationAngle, markerCenters[0]);
         detectArucoMarkers(frame, markerCorners, markerIds);
         if (markerCorners.size() == 4){
             markerCenters = getArucoMarkersCenters(markerCorners);
@@ -347,18 +376,18 @@ cv::Point predictPosition(std::vector<cv::Point> &puckTrajectoryPointsVector,
 
 void addFPSValue(int *FPSArray, int FPS)
 {
-    for (uint8_t i = 1; i < 255; i++)
+    for (int i = 1; i < FPS_COUNTER_MAX_SIZE; i++)
     {
         FPSArray[i-1] = FPSArray[i];
     }
-    FPSArray[254] = int(FPS);
+    FPSArray[FPS_COUNTER_MAX_SIZE-1] = int(FPS);
 }
 
 int calculateAverageFPS(const int *countedFPS)//[255])
 {
-    uint8_t nonzero = 0;
+    int nonzero = 0;
     int sum = 0;
-    for (uint8_t i = 0; i < 255; i++)
+    for (int i = 0; i < FPS_COUNTER_MAX_SIZE; i++)
     {
         if (countedFPS[i] != 0)
         {
@@ -397,8 +426,8 @@ int main()
     int fps;
     int64 startingTime;
     int averageFPS;
-    int countedFPS[255];
-    for (uint8_t i = 0; i < 255; i++) {countedFPS[i] = 0;}
+    int countedFPS[FPS_COUNTER_MAX_SIZE];
+    for (int i = 0; i < FPS_COUNTER_MAX_SIZE; i++) {countedFPS[i] = 0;}
     // For puck processing
     cv::Vec2f extrapolationCoefficients;
     cv::Point predictedPointRSP;
@@ -415,7 +444,7 @@ int main()
             capturedFrame.copyTo(copiedFrame);
             if (frameRotationPoint.x != -1)
             {
-                rotateMatByAngle(capturedFrame, frameRotationAngle, frameRotationPoint);
+                rotateMatByAngle(capturedFrame, frameRotationAngle, frameRotationPoint, programSettings);
                 ROIFrame = cv::Mat(capturedFrame, ROI);
             }
             else
