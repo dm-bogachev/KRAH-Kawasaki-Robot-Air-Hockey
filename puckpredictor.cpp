@@ -1,6 +1,6 @@
-#include "positionpredictor.h"
+#include "puckpredictor.h"
 
-cv::Vec2f PositionPredictor::getExtrapolationCoefficients(const std::vector<cv::Point> &pointsVector)
+cv::Vec2f PuckPredictor::getExtrapolationCoefficients(const std::vector<cv::Point> &pointsVector)
 {
     int sumy = 0, sumx = 0, sumx2 = 0, sumxy = 0;
     float n = pointsVector.size(), a, b;
@@ -19,12 +19,12 @@ cv::Vec2f PositionPredictor::getExtrapolationCoefficients(const std::vector<cv::
     return cv::Vec2f(a, b);
 }
 
-bool PositionPredictor::in_Range(int x, int a, int b)
+bool PuckPredictor::in_Range(int x, int a, int b)
 {
     return (x >= a)&&(x <= b);
 }
 
-cv::Point PositionPredictor::predictPosition(std::vector<cv::Point> &puckTrajectoryPointsVector, int predictionPointX, cv::Vec2f extrapolationCoefficients, cv::Size frameSize) {
+cv::Point PuckPredictor::predictPosition(std::vector<cv::Point> &puckTrajectoryPointsVector, int predictionPointX, cv::Vec2f extrapolationCoefficients, cv::Size frameSize) {
 
     if (puckTrajectoryPointsVector.size() < 2){return cv::Point(-1, -1);}
 
@@ -63,12 +63,12 @@ cv::Point PositionPredictor::predictPosition(std::vector<cv::Point> &puckTraject
     } while(true);
 }
 
-PositionPredictor::PositionPredictor()
+PuckPredictor::PuckPredictor()
 {
 
 }
 
-void PositionPredictor::predict(FrameGrabber frameGrabber, PuckDetector puckDetector, Settings programSettings)
+void PuckPredictor::predict(FrameGrabber frameGrabber, PuckDetector puckDetector, Settings programSettings)
 {
     extrapolationCoefficients = getExtrapolationCoefficients(puckDetector.puckTrajectoryPointsVector);
     predictedPointMRR = predictPosition(puckDetector.puckTrajectoryPointsVector, MAX_ROBOT_REACH,

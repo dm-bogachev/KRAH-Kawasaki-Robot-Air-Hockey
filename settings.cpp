@@ -21,6 +21,7 @@ void Settings::Save()
     settings->setValue("image_roi_rect", QRect(cvImageROIRect.x, cvImageROIRect.y,
                                                cvImageROIRect.width, cvImageROIRect.height));
     settings->setValue("image_rotation_point", QPoint(cvImageRotationPoint.x, cvImageROIRect.y));
+    settings->setValue("puck_position_y_limit", puckPositionYLimit);
     settings->endGroup();
 
     settings->beginGroup("Camera_properties");
@@ -43,6 +44,8 @@ void Settings::Save()
     settings->beginGroup("Game_strategy");
     settings->setValue("robot_striker_position", robotStrikerPosition);
     settings->setValue("robot_motion_range", robotMotionRange);
+    settings->setValue("puck_speed_slow", puckSpeedSlow);
+    settings->setValue("k_p", Kp);
     settings->endGroup();
 
     settings->sync();
@@ -63,6 +66,8 @@ void Settings::Load()
     cvImageROIRect = cv::Rect(tmpRect.x(), tmpRect.y(), tmpRect.width(), tmpRect.height());
     QPoint tmpPoint = settings->value("image_rotation_point", QPoint(-1,-1)).toPoint();
     cvImageRotationPoint = cv::Point(tmpPoint.x(), tmpPoint.y());
+    //tmpPoint = settings->value("puck_position_y_limit", QPoint(0, tmpRect.height())).toPoint();
+    puckPositionYLimit = settings->value("puck_position_y_limit", 0).toInt();
 
     settings->endGroup();
 
@@ -86,5 +91,7 @@ void Settings::Load()
     settings->beginGroup("Game_strategy");
     robotStrikerPosition = settings->value("robot_striker_position", 0).toInt();
     robotMotionRange = settings->value("robot_motion_range", 0).toInt();
+    puckSpeedSlow = settings->value("puck_speed_slow", 20).toInt();
+    Kp = settings->value("k_p", 10000).toInt();
     settings->endGroup();
 }

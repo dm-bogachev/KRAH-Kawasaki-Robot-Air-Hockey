@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11 console
@@ -13,23 +13,27 @@ win32:RC_ICONS += icon.ico
 SOURCES += \
         cvgui.cpp \
         framegrabber.cpp \
+        gamealgorithm.cpp \
         main.cpp \
         performance.cpp \
-        positionpredictor.cpp \
         puckdetector.cpp \
+        puckpredictor.cpp \
         settings.cpp \
-        trectdetector.cpp
+        trectdetector.cpp \
+        udpsender.cpp
 
 
 HEADERS += \
     cvgui.h \
     framegrabber.h \
+    gamealgorithm.h \
     performance.h \
-    positionpredictor.h \
     puckdetector.h \
+    puckpredictor.h \
     settings.h \
     sortcvpoints.h \
-    trectdetector.h
+    trectdetector.h \
+    udpsender.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -43,4 +47,7 @@ CONFIG( debug, debug|release ) {
 } else {
     LIBS += $$files(C:\opencv\msvc\lib\release\*.lib)
 }
+
+DISTFILES += \
+    robot/program.as
 

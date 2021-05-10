@@ -1,5 +1,25 @@
 #include "cvgui.h"
 
+void cvGUI::setupTrackbarsWindow(Settings &programSettings)
+{
+    cv::namedWindow(TRACKBARS_NAME, cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("houghParam1", TRACKBARS_NAME, &programSettings.houghParam1, 1024);
+    cv::createTrackbar("houghParam2", TRACKBARS_NAME, &programSettings.houghParam2, 1024);
+    cv::createTrackbar("puckMinRadius", TRACKBARS_NAME, &programSettings.puckMinRadius, 500);
+    cv::createTrackbar("puckMaxRadius", TRACKBARS_NAME, &programSettings.puckMaxRadius, 500);
+    cv::createTrackbar("robotStrikerPosition", TRACKBARS_NAME,
+                       &programSettings.robotStrikerPosition,
+                       programSettings.cameraResolution.width());
+    cv::createTrackbar("robotMotionRange", TRACKBARS_NAME,
+                       &programSettings.robotMotionRange,
+                       programSettings.cameraResolution.width());
+    cv::createTrackbar("puckPositionYMinLimit", TRACKBARS_NAME,
+                       &programSettings.puckPositionYLimit,
+                       programSettings.cameraResolution.width());
+    cv::createTrackbar("Kp", TRACKBARS_NAME,
+                       &programSettings.Kp, 20000);
+}
+
 void cvGUI::showInfo(Settings programSettings)
 {
 
@@ -45,7 +65,7 @@ void cvGUI::displayWindows(Settings &programSettings,
                            FrameGrabber frameGrabber,
                            TRectDetector tableBorderDetector,
                            PuckDetector puckDetector,
-                           PositionPredictor posPredictor)
+                           PuckPredictor posPredictor)
 {
     cv::cvtColor(frameGrabber.frame, frameGrabber.frame, cv::COLOR_GRAY2RGB);
     if (puckDetector.currentPoint.x != -1){cv::circle(frameGrabber.frame,
@@ -58,9 +78,23 @@ void cvGUI::displayWindows(Settings &programSettings,
              cv::Point(ROBOT_STRIKER_POSITION,frameGrabber.frameHeight),
              CV_COLOR_BLUE, 2);
     cv::line(frameGrabber.frame,
+             cv::Point(MAX_ROBOT_REACH - programSettings.Kp*abs(puckDetector.puckAverageSpeed[0])/1000,0),
+             cv::Point(MAX_ROBOT_REACH - programSettings.Kp*abs(puckDetector.puckAverageSpeed[0])/1000, frameGrabber.frameHeight),
+             CV_COLOR_BLUE, 2);
+    cv::line(frameGrabber.frame,
              cv::Point(MAX_ROBOT_REACH,0),
              cv::Point(MAX_ROBOT_REACH, frameGrabber.frameHeight),
-             CV_COLOR_BLUE, 2);
+             CV_COLOR_RED, 2);
+    //
+    cv::line(frameGrabber.frame,
+             cv::Point(0, frameGrabber.frameHeight/2 - programSettings.puckPositionYLimit),
+             cv::Point(frameGrabber.frameWidth, frameGrabber.frameHeight/2 - programSettings.puckPositionYLimit),
+             CV_COLOR_RED, 2);
+    cv::line(frameGrabber.frame,
+             cv::Point(0, frameGrabber.frameHeight/2 + programSettings.puckPositionYLimit),
+             cv::Point(frameGrabber.frameWidth, frameGrabber.frameHeight/2 + programSettings.puckPositionYLimit),
+             CV_COLOR_RED, 2);
+    //
     if (posPredictor.predictedPointRSP.x != -1){cv::circle(frameGrabber.frame, posPredictor.predictedPointRSP, 20, CV_COLOR_WHITE);}
 //  cv::line(ROIFrame, cv::Point(0, posPredictor.extrapolationCoefficients[0]*0 + extrapolationCoefficients[1]),
 //           cv::Point(ROIFrameSize.width, extrapolationCoefficients[0]*ROIFrameSize.width + extrapolationCoefficients[1]),

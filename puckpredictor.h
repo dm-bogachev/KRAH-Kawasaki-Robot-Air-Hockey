@@ -1,5 +1,5 @@
-#ifndef POSITIONPREDICTOR_H
-#define POSITIONPREDICTOR_H
+#ifndef PUCKPREDICTOR_H
+#define PUCKPREDICTOR_H
 
 #include <opencv2/core.hpp>
 
@@ -9,7 +9,7 @@
 #define ROBOT_STRIKER_POSITION programSettings.robotStrikerPosition
 #define MAX_ROBOT_REACH programSettings.robotStrikerPosition - programSettings.robotMotionRange
 
-class PositionPredictor
+class PuckPredictor
 {
 private:
     cv::Vec2f getExtrapolationCoefficients(const std::vector<cv::Point> &pointsVector);
@@ -20,7 +20,7 @@ private:
                               cv::Size frameSize);
 
 public:
-    PositionPredictor();
+    PuckPredictor();
     void predict(FrameGrabber frameGrabber, PuckDetector puckDetector, Settings programSettings);
 
     cv::Vec2f extrapolationCoefficients;
@@ -28,4 +28,4 @@ public:
     cv::Point predictedPointMRR;
 };
 
-#endif // POSITIONPREDICTOR_H
+#endif // PUCKPREDICTOR_H

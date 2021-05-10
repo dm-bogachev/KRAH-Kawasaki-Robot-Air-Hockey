@@ -23,17 +23,20 @@ public:
     QString trackbarsWindowName;
     int cameraAddress;
     QSize cameraResolution;
-    int maxSkippedFrames;
-    int pointsVectorLength;
+    cv::Point cvImageRotationPoint;
+    cv::Rect cvImageROIRect;
+    double cvImageRotationAngle;
     int houghParam1;
     int houghParam2;
     int puckMinRadius;
     int puckMaxRadius;
+    int maxSkippedFrames;
+    int pointsVectorLength;
     int robotStrikerPosition;
     int robotMotionRange;
-    cv::Point cvImageRotationPoint;
-    cv::Rect cvImageROIRect;
-    double cvImageRotationAngle;
+    int puckSpeedSlow;
+    int Kp;
+    int puckPositionYLimit;
 };
 
 
