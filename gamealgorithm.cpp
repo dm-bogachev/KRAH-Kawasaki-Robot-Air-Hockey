@@ -14,8 +14,6 @@ void GameAlgorithm::initStagesMap()
     stagesMap.insert(std::pair<std::string,bool>("BIF",false));
     stagesMap.insert(std::pair<std::string,bool>("FOS",false));
     stagesMap.insert(std::pair<std::string,bool>("FOF",false));
-    stagesMap.insert(std::pair<std::string,bool>("BOS",false));
-    stagesMap.insert(std::pair<std::string,bool>("BOF",false));
 }
 
 void GameAlgorithm::setState(std::string state)
@@ -76,21 +74,20 @@ void GameAlgorithm::process(PuckDetector puckDetector, PuckPredictor puckPredict
             if (abs(puckDetector.puckAverageSpeed[0]) < PUCK_SPEED_SLOW)
             { // Puck is slow enough to hit
                 setState("BIS");
-                if (checkState("BIS")){
-                    qDebug() << "Puck is very slow, so we just hit it directly";
-                    robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
-                    robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 100));
-                    robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
-                    robotTrajectory.push_back(cv::Scalar(frameWidth/2,0));
-                    qDebug() << "Robot trajectory: " << puckDetector.currentPoint.y << 0 << 100 << 0 << 50;
-                }
+
+                qDebug() << "Puck is very slow, so we just hit it directly";
+                robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
+                robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 100));
+                robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
+                robotTrajectory.push_back(cv::Scalar(frameWidth/2,0));
+                qDebug() << "Robot trajectory: " << puckDetector.currentPoint.y << 0 << 100 << 0 << 50;
 
             } else
             { // Puck is fast enough to hit
                 qDebug() << puckPredictor.predictedPointRSP.y << puckPredictor.predictedPointMRR.y;
             }
         } else
-        {   setState("BOF");
+        {
             //qDebug() << "Puck State 4" << "Robot will return in home position";
         }
     }
