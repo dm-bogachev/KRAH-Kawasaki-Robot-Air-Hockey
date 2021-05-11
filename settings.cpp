@@ -14,6 +14,7 @@ void Settings::Save()
     settings->setValue("gpu_acceleration", GPUAcceleration);
     settings->setValue("video_window_name", videoWindowName);
     settings->setValue("trackbars_window_name", trackbarsWindowName);
+    settings->setValue("debug_video_path", debugVideoPath);
     settings->endGroup();
 
     settings->beginGroup("Environment_options");
@@ -57,6 +58,7 @@ void Settings::Load()
     GPUAcceleration = settings->value("gpu_acceleration", true).toBool();
     videoWindowName = settings->value("video_window_name", "KRAH VIDEO").toString();
     trackbarsWindowName = settings->value("trackbars_window_name", "KRAH TRACKBARS").toString();
+    debugVideoPath = settings->value("debug_video_path", "").toString();
     settings->endGroup();
 
     settings->beginGroup("Environment_options");

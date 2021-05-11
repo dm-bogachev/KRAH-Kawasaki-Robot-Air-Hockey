@@ -17,6 +17,10 @@ class GameAlgorithm
 {
 private:
     UDPSender udpSender;
+    std::map<std::string, bool> stagesMap;
+    void initStagesMap();
+    void setState(std::string state);
+    bool checkState(std::string state);
 public:
     GameAlgorithm();
     void process(PuckDetector puckDetector, PuckPredictor puckPredictor, Settings programSettings, int frameWidth);

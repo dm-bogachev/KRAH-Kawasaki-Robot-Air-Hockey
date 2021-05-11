@@ -54,7 +54,7 @@ cv::Point3f PuckDetector::findPuckCPU(cv::Mat frame, Settings programSettings)
     }
 
     cv::Point3f center(cvRound(circles[0][0]), cvRound(circles[0][1]), cvRound(circles[0][2]));
-    qDebug() << "Detected puck with raduis: " << cvRound(circles[0][2]);
+    //qDebug() << "Detected puck with raduis: " << cvRound(circles[0][2]);
 
     return center;
 }
@@ -77,7 +77,7 @@ cv::Point3f PuckDetector::findPuckGPU(cv::cuda::GpuMat frame, Settings programSe
     }
 
     cv::Point3f center(cvRound(gpuCircles[0][0]), cvRound(gpuCircles[0][1]), cvRound(gpuCircles[0][2]));
-    qDebug() << "Detected puck with raduis: " << cvRound(gpuCircles[0][2]);
+    //qDebug() << "Detected puck with raduis: " << cvRound(gpuCircles[0][2]);
 
     return center;
 }

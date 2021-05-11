@@ -36,7 +36,7 @@ cvGUI::cvGUI(Settings &programSettings)
 
 bool cvGUI::processKeyboard(Settings &programSettings, FrameGrabber frameGrabber, TRectDetector tableBorderDetector)
 {
-    char pressedKey = cv::waitKey(1);
+    char pressedKey = cv::waitKey(0);
     switch (pressedKey) {
     case 'c':
         tableBorderDetector.detectTableBorders(frameGrabber, programSettings);
@@ -96,7 +96,9 @@ void cvGUI::displayWindows(Settings &programSettings,
              CV_COLOR_RED, 2);
     //
     if (posPredictor.predictedPointRSP.x != -1){cv::circle(frameGrabber.frame, posPredictor.predictedPointRSP, 20, CV_COLOR_WHITE);}
-//  cv::line(ROIFrame, cv::Point(0, posPredictor.extrapolationCoefficients[0]*0 + extrapolationCoefficients[1]),
+    if (posPredictor.predictedPointMRR.x != -1){cv::circle(frameGrabber.frame, posPredictor.predictedPointMRR, 20, CV_COLOR_WHITE);}
+
+    //  cv::line(ROIFrame, cv::Point(0, posPredictor.extrapolationCoefficients[0]*0 + extrapolationCoefficients[1]),
 //           cv::Point(ROIFrameSize.width, extrapolationCoefficients[0]*ROIFrameSize.width + extrapolationCoefficients[1]),
 //           CV_COLOR_BLUE, 2);
 //  cv::line(ROIFrame, cv::Point(puckPoint.x, puckPoint.y),

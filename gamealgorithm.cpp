@@ -1,5 +1,34 @@
 #include "gamealgorithm.h"
 
+void GameAlgorithm::initStagesMap()
+{
+    /*
+     XYZ:
+     X: F - forward, B - backward
+     Y: I - Inside robotReach, O - outside robotReach, H - inside trigger
+     Z: S - slow speed, F - fast speed
+    */
+    stagesMap.insert(std::pair<std::string,bool>("FIS",false));
+    stagesMap.insert(std::pair<std::string,bool>("FIF",false));
+    stagesMap.insert(std::pair<std::string,bool>("BIS",false));
+    stagesMap.insert(std::pair<std::string,bool>("BIF",false));
+    stagesMap.insert(std::pair<std::string,bool>("FOS",false));
+    stagesMap.insert(std::pair<std::string,bool>("FOF",false));
+    stagesMap.insert(std::pair<std::string,bool>("BOS",false));
+    stagesMap.insert(std::pair<std::string,bool>("BOF",false));
+}
+
+void GameAlgorithm::setState(std::string state)
+{
+    initStagesMap();
+    stagesMap[state] = true;
+}
+
+bool GameAlgorithm::checkState(std::string state)
+{
+    return stagesMap[state];
+}
+
 GameAlgorithm::GameAlgorithm()
 {
 
@@ -12,7 +41,6 @@ void GameAlgorithm::process(PuckDetector puckDetector, PuckPredictor puckPredict
     if (puckDetector.isForwardDirection())
     {
         robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
-        udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameWidth);
         /*
         if (puckDetector.currentPoint.x > MAX_ROBOT_REACH)
         {
@@ -44,22 +72,27 @@ void GameAlgorithm::process(PuckDetector puckDetector, PuckPredictor puckPredict
     {
         if (puckDetector.currentPoint.x > MAX_ROBOT_REACH)
         {
-            qDebug() << "Average speed" << puckDetector.puckAverageSpeed[0];
+            qDebug() << "Backward direction. Robot can reach puck";
             if (abs(puckDetector.puckAverageSpeed[0]) < PUCK_SPEED_SLOW)
             { // Puck is slow enough to hit
-                robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
-                robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 100));
-                robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
-                robotTrajectory.push_back(cv::Scalar(frameWidth/2,0));
-                udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameWidth);
-                qDebug() << "Puck Stage 3.1" << "Robot will attack and return home";
+                setState("BIS");
+                if (checkState("BIS")){
+                    qDebug() << "Puck is very slow, so we just hit it directly";
+                    robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
+                    robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 100));
+                    robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
+                    robotTrajectory.push_back(cv::Scalar(frameWidth/2,0));
+                    qDebug() << "Robot trajectory: " << puckDetector.currentPoint.y << 0 << 100 << 0 << 50;
+                }
+
             } else
             { // Puck is fast enough to hit
-                qDebug() << "Puck Stage 3.2" << "Robot will return in home position safe";;
+                qDebug() << puckPredictor.predictedPointRSP.y << puckPredictor.predictedPointMRR.y;
             }
         } else
-        {
-            qDebug() << "Puck State 4" << "Robot will return in home position";
+        {   setState("BOF");
+            //qDebug() << "Puck State 4" << "Robot will return in home position";
         }
     }
+    udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameWidth);
 }

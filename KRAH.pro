@@ -49,5 +49,6 @@ CONFIG( debug, debug|release ) {
 }
 
 DISTFILES += \
+    krah.ini \
     robot/program.as
 

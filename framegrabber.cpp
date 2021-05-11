@@ -64,7 +64,13 @@ FrameGrabber::FrameGrabber(int cameraAddress, QSize cameraResolution)
 
 FrameGrabber::FrameGrabber(Settings programSettings)
 {
-    videoCapture = cv::VideoCapture(programSettings.cameraAddress, cv::CAP_DSHOW);
+    if (programSettings.debugVideoPath != "")
+    {
+        videoCapture = cv::VideoCapture(programSettings.debugVideoPath.toStdString());
+    } else
+    {
+        videoCapture = cv::VideoCapture(programSettings.cameraAddress, cv::CAP_DSHOW);
+    }
     cameraOpened = true;
     if (!videoCapture.isOpened())
     {

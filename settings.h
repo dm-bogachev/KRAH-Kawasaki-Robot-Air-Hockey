@@ -21,6 +21,7 @@ public:
     bool GPUAcceleration;
     QString videoWindowName;
     QString trackbarsWindowName;
+    QString debugVideoPath;
     int cameraAddress;
     QSize cameraResolution;
     cv::Point cvImageRotationPoint;
