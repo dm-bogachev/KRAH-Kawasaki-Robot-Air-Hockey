@@ -75,3 +75,4 @@ debug/*
 release/*
 .vs*
 pic.jpg
+compile_commands.json

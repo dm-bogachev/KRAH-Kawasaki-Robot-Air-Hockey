@@ -5,6 +5,7 @@
 
 #include <puckdetector.h>
 #include <puckpredictor.h>
+#include <udpsender.h>
 #include <settings.h>
 
 #define ROBOT_STRIKER_POSITION programSettings.robotStrikerPosition
@@ -15,10 +16,10 @@
 class GameAlgorithm
 {
 private:
-
+    UDPSender udpSender;
 public:
     GameAlgorithm();
-    void process(PuckDetector puckDetector, PuckPredictor puckPredictor, Settings programSettings);
+    void process(PuckDetector puckDetector, PuckPredictor puckPredictor, Settings programSettings, int frameWidth);
 };
 
 #endif // GAMEALGORITHM_H

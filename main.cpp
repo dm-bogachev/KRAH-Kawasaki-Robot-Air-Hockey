@@ -16,10 +16,23 @@
 #include <trectdetector.h>
 #include <puckdetector.h>
 #include <puckpredictor.h>
+#include <gamealgorithm.h>
 #include <cvgui.h>
 
 int main()
 {
+//    cv::Scalar p1 = cv::Scalar(35, 0);
+//    cv::Scalar p2 = cv::Scalar(50, 100);
+//    std::vector<cv::Scalar> po;
+//    po.push_back(p1);
+//    po.push_back(p2);
+//    po.push_back(cv::Scalar(100,100));
+//    po.push_back(cv::Scalar(100,0));
+//    po.push_back(cv::Scalar(50,0));
+
+//    while (true)
+//        sender.moveTo(po, 45, 100);
+
     // Define all variables
     // General
     Settings programSettings;
@@ -29,8 +42,8 @@ int main()
     FrameGrabber frameGrabber(programSettings);
     TRectDetector tableBorderDetector;
     PuckDetector puckDetector;
-    PuckPredictor posPredictor;
-
+    PuckPredictor puckPredictor;
+    GameAlgorithm game;
     while (true) {
         FPSCounter.resetCounter();
         frameGrabber.grab();
@@ -39,7 +52,8 @@ int main()
         puckDetector.detect(frameGrabber, programSettings);
         if (puckDetector.isPuckDetected())
         {
-            posPredictor.predict(frameGrabber, puckDetector, programSettings);
+            puckPredictor.predict(frameGrabber, puckDetector, programSettings);
+            game.process(puckDetector, puckPredictor, programSettings, frameGrabber.frameHeight);
         }
         FPSCounter.stopCounter();
         gui.displayWindows(programSettings,
@@ -47,7 +61,7 @@ int main()
                            frameGrabber,
                            tableBorderDetector,
                            puckDetector,
-                           posPredictor);
+                           puckPredictor);
         if (gui.processKeyboard(programSettings,
                                 frameGrabber,
                                 tableBorderDetector))
