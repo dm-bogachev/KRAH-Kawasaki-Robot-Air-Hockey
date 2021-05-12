@@ -38,34 +38,31 @@ void GameAlgorithm::process(PuckDetector puckDetector, PuckPredictor puckPredict
     if (puckDetector.puckTrajectoryPointsVector.size() < 2) {return;}
     if (puckDetector.isForwardDirection())
     {
-        robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
         /*
-        if (puckDetector.currentPoint.x > MAX_ROBOT_REACH)
+        if (puckDetector.currentPoint.y > MAX_ROBOT_REACH)
         {
-            if (puckDetector.currentPoint.x > TRIGGER_LINE)
-            {
-                robotTrajectory.push_back(cv::Scalar((puckPredictor.predictedPointMRR.y), 0));
-                robotTrajectory.push_back(cv::Scalar((puckPredictor.predictedPointRSP.y), 100));
-                robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
-                robotTrajectory.push_back(cv::Scalar(frameWidth/2,0));
-                qDebug() << "Puck Stage 1.1" << "Attack normally";
-            }
-        } else
-        {
-            if (false || abs(puckDetector.puckAverageSpeed[0]) < PUCK_SPEED_SLOW)
+            if (abs(puckDetector.puckAverageSpeed[0]) < PUCK_SPEED_SLOW)
             { // Puck is slow enough to hit
+                qDebug() << "Puck is very slow, so we just hit it directly";
                 robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
                 robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 100));
                 robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
                 robotTrajectory.push_back(cv::Scalar(frameWidth/2,0));
-                udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameWidth);
-                qDebug() << "Puck Stage 3.1" << "Robot will attack and return home";
-            } else
-            { // Puck is fast enough to hit
-                qDebug() << "Puck Stage 3.2" << "Robot will return in home position safe";;
+                if (!robotTrajectory.empty()){udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameWidth);}
+                qDebug() << "Robot trajectory: " << puckDetector.currentPoint.y << 0 << 100 << 0 << 50;
+                return;
             }
         }
         */
+        if (puckDetector.currentPoint.x > TRIGGER_LINE)
+        {
+            robotTrajectory.push_back(cv::Scalar(puckPredictor.predictedPointRSP.y, 0));
+            robotTrajectory.push_back(cv::Scalar(puckPredictor.predictedPointMRR.y, 100));
+            robotTrajectory.push_back(cv::Scalar(frameWidth/2,0));
+            if (!robotTrajectory.empty()){udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameWidth);}
+            qDebug() << "kiiiiiiiiiiiiiiiiiiiiiiii: " << puckDetector.currentPoint.y << 0 << 100 << 0 << 50;
+            return;
+        }
     } else
     {
         if (puckDetector.currentPoint.x > MAX_ROBOT_REACH)
@@ -73,8 +70,6 @@ void GameAlgorithm::process(PuckDetector puckDetector, PuckPredictor puckPredict
             qDebug() << "Backward direction. Robot can reach puck";
             if (abs(puckDetector.puckAverageSpeed[0]) < PUCK_SPEED_SLOW)
             { // Puck is slow enough to hit
-                setState("BIS");
-
                 qDebug() << "Puck is very slow, so we just hit it directly";
                 robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
                 robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 100));
@@ -84,12 +79,16 @@ void GameAlgorithm::process(PuckDetector puckDetector, PuckPredictor puckPredict
 
             } else
             { // Puck is fast enough to hit
+                robotTrajectory.push_back(cv::Scalar(puckPredictor.predictedPointRSP.y, 0));
+                robotTrajectory.push_back(cv::Scalar(puckPredictor.predictedPointMRR.y, 100));
+                robotTrajectory.push_back(cv::Scalar(frameWidth/2,0));
                 qDebug() << puckPredictor.predictedPointRSP.y << puckPredictor.predictedPointMRR.y;
             }
         } else
         {
+            robotTrajectory.push_back(cv::Scalar(frameWidth/2,0));
             //qDebug() << "Puck State 4" << "Robot will return in home position";
         }
     }
-    udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameWidth);
+    if (!robotTrajectory.empty()){udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameWidth);}
 }

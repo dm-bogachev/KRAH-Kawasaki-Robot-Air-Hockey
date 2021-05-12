@@ -36,7 +36,7 @@ cvGUI::cvGUI(Settings &programSettings)
 
 bool cvGUI::processKeyboard(Settings &programSettings, FrameGrabber frameGrabber, TRectDetector tableBorderDetector)
 {
-    char pressedKey = cv::waitKey(0);
+    char pressedKey = cv::waitKey(1);
     switch (pressedKey) {
     case 'c':
         tableBorderDetector.detectTableBorders(frameGrabber, programSettings);

@@ -21,20 +21,6 @@
 
 int main()
 {
-//    cv::Scalar p1 = cv::Scalar(35, 0);
-//    cv::Scalar p2 = cv::Scalar(50, 100);
-//    std::vector<cv::Scalar> po;
-//    po.push_back(p1);
-//    po.push_back(p2);
-//    po.push_back(cv::Scalar(100,100));
-//    po.push_back(cv::Scalar(100,0));
-//    po.push_back(cv::Scalar(50,0));
-
-//    while (true)
-//        sender.moveTo(po, 45, 100);
-
-    // Define all variables
-    // General
     Settings programSettings;
     programSettings.Load();
     cvGUI gui(programSettings);

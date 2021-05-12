@@ -39,7 +39,7 @@ N_INT15    "teach_reset  "
 .INTER_PANEL_COLOR_D
 182,3,224,244,28,159,252,255,251,255,0,31,2,241,52,219,
 .END
-.PROGRAM hockey()
+.PROGRAM hockey ()
   ;
   SPEED 100 ALWAYS
   ACCURACY 5 ALWAYS
@@ -69,7 +69,6 @@ N_INT15    "teach_reset  "
   LMOVE p[2]
   LMOVE p[3]
   ;
-  
 .END
 .PROGRAM hockey.pc ()
   ;
@@ -93,6 +92,7 @@ N_INT15    "teach_reset  "
         ;TYPE 0: .deltax, .deltay
         ;POINT hockey_point[.i] = TRANS (.deltax, .deltay)
       END
+      ;TYPE 0: .$recv_str[0]
       .$temp1 = $DECODE (.$recv_str[0], ":")
       CALL addpoint.pc(.$temp1, .numberOfPoints)
       hockey_points = .numberOfPoints
@@ -186,7 +186,7 @@ N_INT15    "teach_reset  "
   .deltay = VAL (.$str)
   .deltay = deltay*.deltay/100
   POINT hockey_point[.index] = TRANS (.deltax, .deltay)
-  TYPE 0: .deltax, .deltay
+  ;TYPE 0: .deltax, .deltay
   ;
 .END
 .PROGRAM Comment___ () ; Comments for IDE. Do not use.
@@ -199,9 +199,19 @@ N_INT15    "teach_reset  "
 	; 23
 	; @@@ PROGRAM @@@
 	; 0:hockey:F
+	; .motion_finished 
+	; .j 
 	; 0:teach:F
 	; 0:hockey.pc:B
+	; .timeout 
+	; .max_bytes 
+	; .err_code 
+	; .null 
+	; .ip 
+	; .numberOfPoints 
+	; .i 
 	; 0:ifp.pc:B
+	; .start_permission 
 	; 0:teach.pc:B
 	; 0:autostart5.pc:B
 	; 0:addpoint.pc:B
