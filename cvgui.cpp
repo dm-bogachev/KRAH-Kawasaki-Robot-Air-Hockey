@@ -1,6 +1,6 @@
 #include "cvgui.h"
 
-void cvGUI::setupTrackbarsWindow(Settings &programSettings)
+void cvGUI::setupTrackbarsWindow(Settings& programSettings)
 {
     cv::namedWindow(TRACKBARS_NAME, cv::WINDOW_AUTOSIZE);
     cv::createTrackbar("houghParam1", TRACKBARS_NAME, &programSettings.houghParam1, 1024);
@@ -8,16 +8,23 @@ void cvGUI::setupTrackbarsWindow(Settings &programSettings)
     cv::createTrackbar("puckMinRadius", TRACKBARS_NAME, &programSettings.puckMinRadius, 500);
     cv::createTrackbar("puckMaxRadius", TRACKBARS_NAME, &programSettings.puckMaxRadius, 500);
     cv::createTrackbar("robotStrikerPosition", TRACKBARS_NAME,
-                       &programSettings.robotStrikerPosition,
-                       programSettings.cameraResolution.width());
+        &programSettings.robotStrikerPosition,
+        programSettings.cameraResolution.width());
     cv::createTrackbar("robotMotionRange", TRACKBARS_NAME,
-                       &programSettings.robotMotionRange,
-                       programSettings.cameraResolution.width());
-    cv::createTrackbar("puckPositionYMinLimit", TRACKBARS_NAME,
-                       &programSettings.puckPositionYLimit,
-                       programSettings.cameraResolution.width());
+        &programSettings.robotMotionRange,
+        programSettings.cameraResolution.width());
+    cv::createTrackbar("puckPositionYLimit", TRACKBARS_NAME,
+        &programSettings.puckPositionYLimit,
+        programSettings.cameraResolution.width());
+    cv::createTrackbar("robotGateYLinit", TRACKBARS_NAME,
+        &programSettings.robotGateYLimit,
+        programSettings.cameraResolution.width());
+    cv::createTrackbar("puckSpeedSlow", TRACKBARS_NAME,
+        &programSettings.puckSpeedSlow, 100);
+    cv::createTrackbar("puckSpeedFast", TRACKBARS_NAME,
+        &programSettings.puckSpeedFast, 100);
     cv::createTrackbar("Kp", TRACKBARS_NAME,
-                       &programSettings.Kp, 20000);
+        &programSettings.Kp, 20000);
 }
 
 void cvGUI::showInfo(Settings programSettings)
@@ -78,14 +85,14 @@ void cvGUI::displayWindows(Settings &programSettings,
              cv::Point(ROBOT_STRIKER_POSITION,frameGrabber.frameHeight),
              CV_COLOR_BLUE, 2);
     cv::line(frameGrabber.frame,
-             cv::Point(MAX_ROBOT_REACH - programSettings.Kp*abs(puckDetector.puckAverageSpeed[0])/1000,0),
-             cv::Point(MAX_ROBOT_REACH - programSettings.Kp*abs(puckDetector.puckAverageSpeed[0])/1000, frameGrabber.frameHeight),
+             cv::Point(MAX_ROBOT_REACH - programSettings.Kp*abs(puckDetector.puckAverageSpeed[2])/100,0),
+             cv::Point(MAX_ROBOT_REACH - programSettings.Kp*abs(puckDetector.puckAverageSpeed[2])/100, frameGrabber.frameHeight),
              CV_COLOR_BLUE, 2);
     cv::line(frameGrabber.frame,
              cv::Point(MAX_ROBOT_REACH,0),
              cv::Point(MAX_ROBOT_REACH, frameGrabber.frameHeight),
              CV_COLOR_RED, 2);
-    //
+    //-------------------------------------------
     cv::line(frameGrabber.frame,
              cv::Point(0, frameGrabber.frameHeight/2 - programSettings.puckPositionYLimit),
              cv::Point(frameGrabber.frameWidth, frameGrabber.frameHeight/2 - programSettings.puckPositionYLimit),
@@ -93,7 +100,17 @@ void cvGUI::displayWindows(Settings &programSettings,
     cv::line(frameGrabber.frame,
              cv::Point(0, frameGrabber.frameHeight/2 + programSettings.puckPositionYLimit),
              cv::Point(frameGrabber.frameWidth, frameGrabber.frameHeight/2 + programSettings.puckPositionYLimit),
-             CV_COLOR_RED, 2);
+             CV_COLOR_GREEN, 2);
+    //
+    cv::line(frameGrabber.frame,
+        cv::Point(0, frameGrabber.frameHeight / 2 - programSettings.robotGateYLimit),
+        cv::Point(frameGrabber.frameWidth, frameGrabber.frameHeight / 2 - programSettings.robotGateYLimit),
+        CV_COLOR_GREEN, 2);
+    cv::line(frameGrabber.frame,
+        cv::Point(0, frameGrabber.frameHeight / 2 + programSettings.robotGateYLimit),
+        cv::Point(frameGrabber.frameWidth, frameGrabber.frameHeight / 2 + programSettings.robotGateYLimit),
+        CV_COLOR_GREEN, 2);
+
     //
     if (posPredictor.predictedPointRSP.x != -1){cv::circle(frameGrabber.frame, posPredictor.predictedPointRSP, 20, CV_COLOR_WHITE);}
     if (posPredictor.predictedPointMRR.x != -1){cv::circle(frameGrabber.frame, posPredictor.predictedPointMRR, 20, CV_COLOR_WHITE);}

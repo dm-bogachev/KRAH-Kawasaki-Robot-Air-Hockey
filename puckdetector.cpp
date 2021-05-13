@@ -115,7 +115,7 @@ std::vector<cv::Scalar> PuckDetector::getSpeedVector(std::vector<cv::Point> &puc
         sumSpeed += temp;
     }
     temp = sumSpeed/(signed int)puckSpeedVector.size();
-    puckAverageSpeed = cv::Scalar(temp.x, temp.y);
+    puckAverageSpeed = cv::Scalar(temp.x, temp.y, sqrt(temp.x*temp.x + temp.y*temp.y));
     return puckSpeedVector;
 }
 

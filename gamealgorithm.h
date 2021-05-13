@@ -9,9 +9,10 @@
 #include <settings.h>
 
 #define ROBOT_STRIKER_POSITION programSettings.robotStrikerPosition
-#define MAX_ROBOT_REACH programSettings.robotStrikerPosition - programSettings.robotMotionRange
-#define TRIGGER_LINE MAX_ROBOT_REACH - programSettings.Kp*abs(puckDetector.puckAverageSpeed[0])/1000
+#define MAX_ROBOT_REACH (long long)programSettings.robotStrikerPosition - programSettings.robotMotionRange
+#define TRIGGER_LINE (long long)(MAX_ROBOT_REACH) - programSettings.Kp*abs(puckDetector.puckAverageSpeed[2])/100
 #define PUCK_SPEED_SLOW programSettings.puckSpeedSlow
+#define PUCK_SPEED_FAST programSettings.puckSpeedFast
 
 class GameAlgorithm
 {
@@ -23,7 +24,7 @@ private:
     bool checkState(std::string state);
 public:
     GameAlgorithm();
-    void process(PuckDetector puckDetector, PuckPredictor puckPredictor, Settings programSettings, int frameWidth);
+    void process(PuckDetector puckDetector, PuckPredictor puckPredictor, Settings programSettings, int frameHeight);
 };
 
 #endif // GAMEALGORITHM_H

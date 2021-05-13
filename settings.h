@@ -36,7 +36,7 @@ public:
     int robotStrikerPosition;
     int robotMotionRange;
     int puckSpeedSlow;
-    int maxBackwardsSpeed; // Добавить
+    int puckSpeedFast;
     int Kp;
     int puckPositionYLimit;
     int robotGateYLimit; // Добавить
