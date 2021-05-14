@@ -40,9 +40,9 @@ void FrameGrabber::rotateMatByAngle(cv::Mat &mat, Settings programSettings)
     cv::cuda::GpuMat gpuMat;
     if (GPU_ACCELERATION)
     {
-        gpuMat.upload(mat);
-        rotateMatByAngleGPU(gpuMat, programSettings);
-        gpuMat.download(mat);
+        //gpuMat.upload(mat);
+        rotateMatByAngleGPU(gpuFrame, programSettings);
+        //gpuMat.download(mat);
     } else {
         rotateMatByAngleCPU(mat, programSettings);
     }
@@ -80,6 +80,8 @@ FrameGrabber::FrameGrabber(Settings programSettings)
     videoCapture.set(cv::CAP_PROP_FRAME_WIDTH, programSettings.cameraResolution.width());
     videoCapture.set(cv::CAP_PROP_FRAME_HEIGHT, programSettings.cameraResolution.height());
     videoCapture.set(cv::CAP_PROP_FPS, 90);
+
+    gpuEnabled = programSettings.GPUAcceleration;
 }
 
 void FrameGrabber::grab()
@@ -90,7 +92,14 @@ void FrameGrabber::grab()
         frame = cv::Mat();
     }
     videoCapture.read(frame);
-    cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+    if (gpuEnabled)
+    {
+        gpuFrame.upload(frame);
+        cv::cuda::cvtColor(gpuFrame, gpuFrame, cv::COLOR_BGR2GRAY);
+    } else
+    {
+        cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+    }
     frame.copyTo(pureFrame);
     frameWidth = frame.size().width;
     frameHeight = frame.size().height;

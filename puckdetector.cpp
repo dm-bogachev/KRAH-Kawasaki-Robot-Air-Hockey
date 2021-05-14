@@ -7,7 +7,14 @@ PuckDetector::PuckDetector()
 
 void PuckDetector::detect(FrameGrabber frameGrabber, Settings programSettings)
 {
-    currentPoint = findPuck(frameGrabber.frame, programSettings);
+    if (GPU_ACCELERATION)
+    {
+        currentPoint = findPuckGPU(frameGrabber.gpuFrame, programSettings);
+    } else
+    {
+        currentPoint = findPuckCPU(frameGrabber.frame, programSettings);
+    }
+
     if (currentPoint.x != -1)
     {
         puckDetected = true;
@@ -99,6 +106,8 @@ cv::Point3f PuckDetector::findPuck(cv::Mat &frame, Settings programSettings)
     }
     return puckPoint;
 }
+
+
 
 std::vector<cv::Scalar> PuckDetector::getSpeedVector(std::vector<cv::Point> &puckTrajectoryPointsVector, cv::Scalar &puckAverageSpeed)
 {

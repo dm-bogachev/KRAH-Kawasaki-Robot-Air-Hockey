@@ -7,6 +7,7 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/cudawarping.hpp>
+#include <opencv2/cudaimgproc.hpp>
 
 #include <settings.h>
 
@@ -17,6 +18,7 @@ class FrameGrabber
 private:
     cv::VideoCapture videoCapture;
     bool cameraOpened;
+    bool gpuEnabled;
 
     void rotateMatByAngleCPU(cv::Mat &frame, Settings programSettings);
     void rotateMatByAngleGPU(cv::cuda::GpuMat &gpuMat, Settings programSettings);
@@ -29,6 +31,7 @@ public:
     void warp(Settings programSettings);
     void crop(Settings programSettings);
     cv::Mat frame;
+    cv::cuda::GpuMat gpuFrame;
     cv::Mat pureFrame;
     int frameWidth;
     int frameHeight;

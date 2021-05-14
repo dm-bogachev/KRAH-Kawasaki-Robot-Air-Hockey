@@ -74,7 +74,15 @@ void cvGUI::displayWindows(Settings &programSettings,
                            PuckDetector puckDetector,
                            PuckPredictor posPredictor)
 {
-    cv::cvtColor(frameGrabber.frame, frameGrabber.frame, cv::COLOR_GRAY2RGB);
+    if (GPU_ACCELERATION)
+    {
+        cv::cuda::cvtColor(frameGrabber.gpuFrame, frameGrabber.gpuFrame, cv::COLOR_GRAY2RGB);
+        frameGrabber.gpuFrame.download(frameGrabber.frame);
+    } else
+    {
+        cv::cvtColor(frameGrabber.frame, frameGrabber.frame, cv::COLOR_GRAY2RGB);
+    }
+
     if (puckDetector.currentPoint.x != -1){cv::circle(frameGrabber.frame,
                                                       cv::Point(puckDetector.currentPoint.x,
                                                                 puckDetector.currentPoint.y),
