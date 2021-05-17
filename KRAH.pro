@@ -49,6 +49,8 @@ CONFIG( debug, debug|release ) {
 }
 
 DISTFILES += \
+    SetupScript.iss \
+    basler_acA2000-165um_22729612.pfs \
     krah.ini \
     robot/program.as
 

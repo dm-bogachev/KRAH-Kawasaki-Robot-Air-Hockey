@@ -74,3 +74,4 @@ deploy/*
 .vs*
 pic.jpg
 compile_commands.json
+krah.ini

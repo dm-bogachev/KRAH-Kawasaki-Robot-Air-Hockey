@@ -120,9 +120,17 @@ void FrameGrabber::crop(Settings programSettings)
 {
     if (programSettings.cvImageRotationPoint.x != -1)
     {
-        frame = cv::Mat(frame, programSettings.cvImageROIRect);
+        if (gpuEnabled)
+        {
+            gpuFrame = cv::cuda::GpuMat(gpuFrame, programSettings.cvImageROIRect);
+            frameWidth = gpuFrame.size().width;
+            frameHeight = gpuFrame.size().height;
+        } else {
+            frame = cv::Mat(frame, programSettings.cvImageROIRect);
+            frameWidth = frame.size().width;
+            frameHeight = frame.size().height;
+        }
     }
 
-    frameWidth = frame.size().width;
-    frameHeight = frame.size().height;
+
 }
