@@ -70,6 +70,7 @@ Thumbs.db
 
 debug/*
 release/*
+deploy/*
 .vs*
 pic.jpg
 compile_commands.json

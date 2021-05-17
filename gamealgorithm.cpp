@@ -43,7 +43,6 @@ void GameAlgorithm::process(PuckDetector puckDetector, PuckPredictor puckPredict
     {
         processBackward(puckDetector, puckPredictor, programSettings, frameHeight);
     }
-    //if (!robotTrajectory.empty()){udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameHeight);}
 }
 
 void GameAlgorithm::processBackward(PuckDetector puckDetector, PuckPredictor puckPredictor, Settings programSettings, int frameHeight)
@@ -93,6 +92,13 @@ void GameAlgorithm::processForward(PuckDetector puckDetector, PuckPredictor puck
     {
         // Stage FXS
         //
+        /*
+        robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
+        robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y +
+                                             puckDetector.puckAverageSpeed[1], 100)); // Maybe will be removed
+        robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
+        robotTrajectory.push_back(cv::Scalar(frameHeight/2,0));
+        */
         ;
     } else
     {
@@ -111,7 +117,6 @@ void GameAlgorithm::processForward(PuckDetector puckDetector, PuckPredictor puck
             //if (!robotTrajectory.empty()) { udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameHeight); }
             //return;
         }
-
     }
-
+    if (!robotTrajectory.empty()) { udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameHeight); }
 }
