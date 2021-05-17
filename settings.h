@@ -35,8 +35,10 @@ public:
     int pointsVectorLength;
     int robotStrikerPosition;
     int robotMotionRange;
-    int puckSpeedSlow;
-    int puckSpeedFast;
+    int puckSpeedSlowF;
+    int puckSpeedFastF;
+    int puckSpeedSlowB;
+    int puckSpeedFastB;
     int Kp;
     int puckPositionYLimit;
     int robotGateYLimit; // Добавить
