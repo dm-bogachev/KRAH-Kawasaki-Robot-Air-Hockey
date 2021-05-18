@@ -111,7 +111,7 @@ void cvGUI::displayWindows(Settings &programSettings,
     cv::line(frameGrabber.frame,
              cv::Point(0, frameGrabber.frameHeight/2 + programSettings.puckPositionYLimit),
              cv::Point(frameGrabber.frameWidth, frameGrabber.frameHeight/2 + programSettings.puckPositionYLimit),
-             CV_COLOR_GREEN, 2);
+            CV_COLOR_RED, 2);
     //
     cv::line(frameGrabber.frame,
         cv::Point(0, frameGrabber.frameHeight / 2 - programSettings.robotGateYLimit),
