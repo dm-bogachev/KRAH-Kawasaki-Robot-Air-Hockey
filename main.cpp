@@ -18,11 +18,30 @@
 #include <puckpredictor.h>
 #include <gamealgorithm.h>
 #include <cvgui.h>
+#include <pylon/PylonIncludes.h>
+
+void initBaslerParameters(std::string filename)
+{
+    Pylon::PylonInitialize();
+    try
+    {
+        Pylon::CInstantCamera camera( Pylon::CTlFactory::GetInstance().CreateFirstDevice() );
+        qDebug() << "Using device " << camera.GetDeviceInfo().GetModelName();
+        camera.Open();
+        Pylon::CFeaturePersistence::Load(filename.c_str(), &camera.GetNodeMap(), true );
+        camera.Close();
+    }
+    catch (const Pylon::GenericException& e)
+    {
+        qDebug() << "An exception occurred." << e.GetDescription();
+    }
+}
 
 int main()
 {
     Settings programSettings;
     programSettings.Load();
+    if (!programSettings.baslerPFSFilePath.isEmpty()){initBaslerParameters(programSettings.baslerPFSFilePath.toStdString());}
     cvGUI gui(programSettings);
     Performance FPSCounter;
     FrameGrabber frameGrabber(programSettings);

@@ -22,6 +22,7 @@ public:
     QString videoWindowName;
     QString trackbarsWindowName;
     QString debugVideoPath;
+    QString baslerPFSFilePath;
     int cameraAddress;
     QSize cameraResolution;
     cv::Point cvImageRotationPoint;

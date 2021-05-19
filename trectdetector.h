@@ -7,7 +7,7 @@
 #include <framegrabber.h>
 #include <sortcvpoints.h>
 
-#define pi 3.141592653589793238463
+#define _PI 3.141592653589793238463
 
 class TRectDetector
 {

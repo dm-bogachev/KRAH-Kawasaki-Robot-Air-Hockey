@@ -82,5 +82,5 @@ double TRectDetector::getImageRotationAngle(std::vector<cv::Point> markerCenters
         1-----------------3
     */
     double rotationAngleRad = atan(double(markerCenters[0].y - markerCenters[2].y)/double(markerCenters[0].x - markerCenters[2].x));
-    return rotationAngleRad*180/pi;
+    return rotationAngleRad*180/_PI;
 }

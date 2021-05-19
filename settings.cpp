@@ -15,6 +15,7 @@ void Settings::Save()
     settings->setValue("video_window_name", videoWindowName);
     settings->setValue("trackbars_window_name", trackbarsWindowName);
     settings->setValue("debug_video_path", debugVideoPath);
+    settings->setValue("basler_pfs_file_path", baslerPFSFilePath);
     settings->endGroup();
 
     settings->beginGroup("Environment_options");
@@ -63,6 +64,7 @@ void Settings::Load()
     videoWindowName = settings->value("video_window_name", "KRAH VIDEO").toString();
     trackbarsWindowName = settings->value("trackbars_window_name", "KRAH TRACKBARS").toString();
     debugVideoPath = settings->value("debug_video_path", "").toString();
+    baslerPFSFilePath = settings->value("basler_pfs_file_path", "").toString();
     settings->endGroup();
 
     settings->beginGroup("Environment_options");

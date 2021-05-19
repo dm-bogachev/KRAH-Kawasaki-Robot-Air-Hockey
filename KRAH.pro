@@ -40,6 +40,10 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
+# Basler libraries
+INCLUDEPATH += "C:\Program Files\Basler\pylon 6\Development\include"
+LIBS += $$files(C:\Program Files\Basler\pylon 6\Development\lib\x64\*.lib)
+
 # OpenCV Include and Library files
 INCLUDEPATH += C:\opencv\msvc\include
 CONFIG( debug, debug|release ) {
