@@ -123,6 +123,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="C:\Users\Dmitrii Bogachev\Documents\KRAH-Kawasaki-Robot-Air-Hockey\KRAH_resource.rc" />
+    <ResourceCompile Include=".\KRAH_resource.rc" />
   </ItemGroup>
 </Project>

@@ -21,6 +21,8 @@ void PuckDetector::detect(FrameGrabber frameGrabber, Settings programSettings)
         puckTrajectoryPointsVector.push_back(cv::Point(currentPoint.x, currentPoint.y));
         if (puckTrajectoryPointsVector.size() < 2) {return;}
         puckSpeedVector = getSpeedVector(puckTrajectoryPointsVector, puckAverageSpeed);
+        //if (puckSpeedVector.size() < 2) {return;}
+        //puckAccVector = getAccVector(puckSpeedVector, puckAverageAcc);
         if (checkDirectionChange(puckSpeedVector)) {puckTrajectoryPointsVector.clear();}
         skippedFramesNumber = 0;
     } else
@@ -126,6 +128,25 @@ std::vector<cv::Scalar> PuckDetector::getSpeedVector(std::vector<cv::Point> &puc
     temp = sumSpeed/(signed int)puckSpeedVector.size();
     puckAverageSpeed = cv::Scalar(temp.x, temp.y, sqrt(temp.x*temp.x + temp.y*temp.y));
     return puckSpeedVector;
+}
+
+std::vector<cv::Scalar> PuckDetector::getAccVector(std::vector<cv::Scalar> &puckSpeedVector, cv::Scalar &puckAverageAcc)
+{
+    cv::Scalar acc;
+    cv::Scalar sumAcc;
+    cv::Scalar temp;
+    std::vector<cv::Scalar> puckAccVector;
+
+    for (int i = 1; i < puckSpeedVector.size(); i++)
+    {
+        temp = puckSpeedVector[i] - puckSpeedVector[i-1];
+        acc = cv::Scalar(temp[0], temp[1]);
+        puckSpeedVector.push_back(acc);
+        sumAcc += temp;
+    }
+    temp = sumAcc/(signed int)puckSpeedVector.size();
+    puckAverageAcc = cv::Scalar(temp[0], temp[1], sqrt(temp[0]*temp[0] + temp[1]*temp[1]));
+    return puckAccVector;
 }
 
 bool PuckDetector::checkDirectionChange(std::vector<cv::Scalar> puckSpeedVector)

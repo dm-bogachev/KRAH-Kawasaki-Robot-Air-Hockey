@@ -75,3 +75,4 @@ deploy/*
 pic.jpg
 compile_commands.json
 krah.ini
+*.avi

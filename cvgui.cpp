@@ -43,6 +43,9 @@ void cvGUI::showInfo(Settings programSettings)
 cvGUI::cvGUI(Settings &programSettings)
 {
     setupTrackbarsWindow(programSettings);
+    videoWriter = new VideoWriter(programSettings.videoFolderPath);
+    FPSColor = CV_COLOR_GREEN;
+    isRecording = false;
 }
 
 bool cvGUI::processKeyboard(Settings &programSettings, FrameGrabber frameGrabber, TRectDetector tableBorderDetector)
@@ -60,6 +63,21 @@ bool cvGUI::processKeyboard(Settings &programSettings, FrameGrabber frameGrabber
     case 's':
         programSettings.Save();
         qDebug() << "Settings were successfully saved";
+        break;
+    case 'r':
+        if (isRecording)
+        {
+            isRecording = false;
+            FPSColor = CV_COLOR_GREEN;
+            videoWriter->release();
+            qDebug() << "Recording was stopped";
+        } else
+        {
+            isRecording = true;
+            FPSColor = CV_COLOR_RED;
+            qDebug() << "Recording was started";
+        }
+
         break;
     case 'l':
         programSettings.Load();
@@ -85,6 +103,10 @@ void cvGUI::displayWindows(Settings &programSettings,
     } else
     {
         cv::cvtColor(frameGrabber.frame, frameGrabber.frame, cv::COLOR_GRAY2RGB);
+    }
+    if (isRecording)
+    {
+        videoWriter->write(frameGrabber.recordFrame);
     }
     if (puckDetector.currentPoint.x != -1){cv::circle(frameGrabber.frame,
                                                       cv::Point(puckDetector.currentPoint.x,
@@ -125,6 +147,6 @@ void cvGUI::displayWindows(Settings &programSettings,
     if (posPredictor.predictedPointRSP.x != -1){cv::circle(frameGrabber.frame, posPredictor.predictedPointRSP, 20, CV_COLOR_WHITE);}
     if (posPredictor.predictedPointMRR.x != -1){cv::circle(frameGrabber.frame, posPredictor.predictedPointMRR, 20, CV_COLOR_WHITE);}
     //
-    cv::putText(frameGrabber.frame, std::to_string(FPSCounter.getAverageFPS()), cv::Point(80,80), cv::FONT_HERSHEY_SIMPLEX, 1, CV_COLOR_GREEN);
+    cv::putText(frameGrabber.frame, std::to_string(FPSCounter.getAverageFPS()), cv::Point(80,80), cv::FONT_HERSHEY_SIMPLEX, 1, FPSColor);
     cv::imshow(VIDEO_WINDOW_NAME, frameGrabber.frame);
 }

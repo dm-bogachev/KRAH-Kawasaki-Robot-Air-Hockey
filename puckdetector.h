@@ -17,6 +17,7 @@ private:
     int skippedFramesNumber = 0;
 
     std::vector<cv::Scalar> puckSpeedVector;
+    std::vector<cv::Scalar> puckAccVector;
     bool puckDetected;
 
     cv::Point3f findPuckCPU(cv::Mat frame, Settings programSettings);
@@ -24,12 +25,13 @@ private:
     cv::Point3f findPuck(cv::Mat &frame, Settings programSettings);
     std::vector<cv::Scalar> getSpeedVector(std::vector<cv::Point> &puckTrajectoryPointsVector, cv::Scalar &puckAverageSpeed);
     bool checkDirectionChange(std::vector<cv::Scalar> puckSpeedVector);
-
+    std::vector<cv::Scalar> getAccVector(std::vector<cv::Scalar> &puckSpeedVector, cv::Scalar &puckAverageAcc);
 public:
     PuckDetector();
     cv::Point3f currentPoint;
     std::vector<cv::Point> puckTrajectoryPointsVector;
     cv::Scalar puckAverageSpeed;
+    cv::Scalar puckAverageAcc;
     void detect(FrameGrabber frameGrabber, Settings programSettings);
     bool isPuckDetected();
     bool isForwardDirection();

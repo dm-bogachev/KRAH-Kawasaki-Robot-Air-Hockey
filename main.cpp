@@ -11,6 +11,7 @@
 
 #include <settings.h>
 #include <performance.h>
+#include <videowriter.h>
 #include <sortcvpoints.h>
 #include <framegrabber.h>
 #include <trectdetector.h>
@@ -49,17 +50,22 @@ int main()
     PuckDetector puckDetector;
     PuckPredictor puckPredictor;
     GameAlgorithm game;
+
+
+
     while (true) {
         FPSCounter.resetCounter();
         frameGrabber.grab();
         frameGrabber.warp(programSettings);
         frameGrabber.crop(programSettings);
+
         puckDetector.detect(frameGrabber, programSettings);
         if (puckDetector.isPuckDetected())
         {
             puckPredictor.predict(frameGrabber, puckDetector, programSettings);
             game.process(puckDetector, puckPredictor, programSettings, frameGrabber.frameHeight);
         }
+
         FPSCounter.stopCounter();
         gui.displayWindows(programSettings,
                            FPSCounter,
@@ -70,6 +76,8 @@ int main()
         if (gui.processKeyboard(programSettings,
                                 frameGrabber,
                                 tableBorderDetector))
-        {return 0;}
+        {
+            return 0;
+        }
     }
 }

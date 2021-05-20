@@ -125,8 +125,12 @@ void FrameGrabber::crop(Settings programSettings)
             gpuFrame = cv::cuda::GpuMat(gpuFrame, programSettings.cvImageROIRect);
             frameWidth = gpuFrame.size().width;
             frameHeight = gpuFrame.size().height;
+            gpuFrame.download(frame);
+            frame.copyTo(recordFrame);
+            //frame.copyTo(pureFrame);
         } else {
             frame = cv::Mat(frame, programSettings.cvImageROIRect);
+            frame.copyTo(recordFrame);
             frameWidth = frame.size().width;
             frameHeight = frame.size().height;
         }

@@ -1,7 +1,7 @@
 QT       += core gui network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11 console
+CONFIG += c++11 console static
 CONFIG -= app_bundle
 
 # You can make your code fail to compile if it uses deprecated APIs.
@@ -20,7 +20,8 @@ SOURCES += \
         puckpredictor.cpp \
         settings.cpp \
         trectdetector.cpp \
-        udpsender.cpp
+        udpsender.cpp \
+        videowriter.cpp
 
 
 HEADERS += \
@@ -33,7 +34,8 @@ HEADERS += \
     settings.h \
     sortcvpoints.h \
     trectdetector.h \
-    udpsender.h
+    udpsender.h \
+    videowriter.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

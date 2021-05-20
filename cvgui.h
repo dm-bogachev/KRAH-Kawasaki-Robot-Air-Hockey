@@ -7,6 +7,7 @@
 #include <puckdetector.h>
 #include <performance.h>
 #include <puckpredictor.h>
+#include <videowriter.h>
 
 #define VIDEO_WINDOW_NAME programSettings.videoWindowName.toStdString()
 #define TRACKBARS_NAME programSettings.trackbarsWindowName.toStdString()
@@ -24,6 +25,10 @@ class cvGUI
 private:
     void setupTrackbarsWindow(Settings &programSettings);
     void showInfo(Settings programSettings);
+    VideoWriter *videoWriter;
+    bool isRecording;
+    cv::Scalar FPSColor;
+
 
 public:
     cvGUI(Settings &programSettings);

@@ -113,7 +113,7 @@ void GameAlgorithm::processForward(PuckDetector puckDetector, PuckPredictor puck
         else
         {
             // Stage FN
-            robotTrajectory.push_back(cv::Scalar(frameHeight / 2, 0));
+            robotTrajectory.push_back(cv::Scalar(puckPredictor.predictedPointRSP.y, 0));
             //if (!robotTrajectory.empty()) { udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameHeight); }
             //return;
         }

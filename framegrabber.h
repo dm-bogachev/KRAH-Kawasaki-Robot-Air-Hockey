@@ -3,7 +3,7 @@
 
 #include <QDebug>
 #include <QSize>
-
+#include <opencv2/opencv.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/cudawarping.hpp>
@@ -33,6 +33,7 @@ public:
     cv::Mat frame;
     cv::cuda::GpuMat gpuFrame;
     cv::Mat pureFrame;
+    cv::Mat recordFrame;
     int frameWidth;
     int frameHeight;
     //cv::Mat warpedFrame;

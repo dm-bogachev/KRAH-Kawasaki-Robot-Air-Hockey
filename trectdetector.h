@@ -21,8 +21,6 @@ public:
     TRectDetector(Settings &programSettings);
     TRectDetector();
     void detectTableBorders(FrameGrabber frameGrabber, Settings &programSettings);
-
-
 };
 
 #endif // TRECTDETECTOR_H
