@@ -51,6 +51,7 @@ Source: "deploy\opencv_highgui452.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "deploy\opencv_imgcodecs452.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "deploy\opencv_imgproc452.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "deploy\opencv_videoio452.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "deploy\opencv_videoio_ffmpeg452_64.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "deploy\Qt5Core.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "deploy\Qt5Gui.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "deploy\Qt5Network.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -58,7 +59,7 @@ Source: "deploy\Qt5Test.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "deploy\Qt5Widgets.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "deploy\plugins\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "deploy\robot\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-
+Source: "deploy\basler_acA2000-165um_22729612.pfs"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

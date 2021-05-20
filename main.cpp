@@ -63,6 +63,7 @@ int main()
         if (puckDetector.isPuckDetected())
         {
             puckPredictor.predict(frameGrabber, puckDetector, programSettings);
+            if (puckPredictor.predictedPointRSP.x == -1) {continue;}
             game.process(puckDetector, puckPredictor, programSettings, frameGrabber.frameHeight);
         }
 

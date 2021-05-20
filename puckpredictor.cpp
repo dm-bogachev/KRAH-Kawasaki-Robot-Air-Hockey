@@ -26,7 +26,7 @@ bool PuckPredictor::in_Range(int x, int a, int b)
 
 cv::Point PuckPredictor::predictPosition(std::vector<cv::Point> &puckTrajectoryPointsVector, int predictionPointX, cv::Vec2f extrapolationCoefficients, cv::Size frameSize) {
 
-    if (puckTrajectoryPointsVector.size() < 2){return cv::Point(-1, -1);}
+    if (puckTrajectoryPointsVector.size() < 5){return cv::Point(-1, -1);}
 
     float a = extrapolationCoefficients[0], b = extrapolationCoefficients[1]; // for simplier using
     int predictionPointY, newx = predictionPointX, hitCount = 0;

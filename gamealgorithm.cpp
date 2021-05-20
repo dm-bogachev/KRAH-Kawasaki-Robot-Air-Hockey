@@ -91,15 +91,16 @@ void GameAlgorithm::processForward(PuckDetector puckDetector, PuckPredictor puck
     else if (abs(puckDetector.puckAverageSpeed[0]) < PUCK_SPEED_SLOW_F)
     {
         // Stage FXS
-        //
-        /*
-        robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
-        robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y +
-                                             puckDetector.puckAverageSpeed[1], 100)); // Maybe will be removed
-        robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
-        robotTrajectory.push_back(cv::Scalar(frameHeight/2,0));
-        */
-        ;
+        if (puckDetector.currentPoint.x > MAX_ROBOT_REACH)
+        {
+            robotTrajectory.push_back(cv::Scalar(puckPredictor.predictedPointRSP.y, 0));
+            robotTrajectory.push_back(cv::Scalar(puckPredictor.predictedPointMRR.y, 100));
+            robotTrajectory.push_back(cv::Scalar(frameHeight / 2, 0));
+        }
+        else
+        {
+            robotTrajectory.push_back(cv::Scalar(puckPredictor.predictedPointRSP.y, 0));
+        }
     } else
     {
         // Stage FX

@@ -73,7 +73,7 @@ void Settings::Load()
     settings->beginGroup("Environment_options");
     cvImageRotationAngle = settings->value("image_rotation_angle", 0).toFloat();
 
-    QRect tmpRect = settings->value("image_roi_rect", QRect(0,0,1024,588)).toRect();
+    QRect tmpRect = settings->value("image_roi_rect", QRect(0,0,1024,544)).toRect();
     cvImageROIRect = cv::Rect(tmpRect.x(), tmpRect.y(), tmpRect.width(), tmpRect.height());
     QPoint tmpPoint = settings->value("image_rotation_point", QPoint(-1,-1)).toPoint();
     cvImageRotationPoint = cv::Point(tmpPoint.x(), tmpPoint.y());
@@ -84,7 +84,7 @@ void Settings::Load()
 
     settings->beginGroup("Camera_properties");
     cameraAddress = settings->value("camera_address", 0).toInt();
-    cameraResolution = settings->value("camera_resolution", QSize(1024, 588)).toSize();
+    cameraResolution = settings->value("camera_resolution", QSize(1024, 544)).toSize();
     settings->endGroup();
 
     settings->beginGroup("HoughCircle_parameters");
