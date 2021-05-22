@@ -1,8 +1,8 @@
 QT       += core gui network
-
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11
+CONFIG += c++11 console static
+CONFIG -= app_bundle
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -10,25 +10,21 @@ CONFIG += c++11
 
 win32:RC_ICONS += icon.ico
 
-
 SOURCES += \
-    main.cpp \
-    mainwindow.cpp \
-    cvgui.cpp \
-    framegrabber.cpp \
-    gamealgorithm.cpp \
-    main.cpp \
-    performance.cpp \
-    puckdetector.cpp \
-    puckpredictor.cpp \
-    settings.cpp \
-    trectdetector.cpp \
-    udpsender.cpp \
-    videowriter.cpp \
-    _main.cpp
+        cvgui.cpp \
+        framegrabber.cpp \
+        gamealgorithm.cpp \
+        main.cpp \
+        performance.cpp \
+        puckdetector.cpp \
+        puckpredictor.cpp \
+        settings.cpp \
+        trectdetector.cpp \
+        udpsender.cpp \
+        videowriter.cpp
+
 
 HEADERS += \
-    mainwindow.h \
     cvgui.h \
     framegrabber.h \
     gamealgorithm.h \
@@ -41,8 +37,10 @@ HEADERS += \
     udpsender.h \
     videowriter.h
 
-FORMS += \
-    mainwindow.ui
+# Default rules for deployment.
+qnx: target.path = /tmp/$${TARGET}/bin
+else: unix:!android: target.path = /opt/$${TARGET}/bin
+!isEmpty(target.path): INSTALLS += target
 
 # Basler libraries
 INCLUDEPATH += "C:\Program Files\Basler\pylon 6\Development\include"
@@ -62,8 +60,3 @@ DISTFILES += \
     krah.ini \
     robot/program.as
 
-
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
