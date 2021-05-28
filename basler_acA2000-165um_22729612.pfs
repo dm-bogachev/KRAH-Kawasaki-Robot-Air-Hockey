@@ -11,8 +11,8 @@ CenterX	0
 CenterY	0
 BinningHorizontal	2
 BinningVertical	2
-ReverseX	0
-ReverseY	0
+ReverseX	1
+ReverseY	1
 PixelFormat	Mono8
 TestImageSelector	Off
 GainSelector	All
@@ -28,7 +28,7 @@ RemoveParameterLimitSelector	AutoTargetValue
 RemoveParameterLimit	0
 RemoveParameterLimitSelector	Gain
 ExposureMode	Timed
-ExposureTime	500.0
+ExposureTime	750.0
 AcquisitionBurstFrameCount	1
 TriggerSelector	FrameBurstStart
 TriggerMode	Off

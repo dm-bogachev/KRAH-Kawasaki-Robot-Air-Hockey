@@ -20,6 +20,8 @@ N_INT15    "teach_reset  "
 6,8,"udp_port"," UDP PORT","",10,9,5,1,0
 7,10,"","  RESTART","   PCS","",10,4,9,1,PCEX 5: autostart5.pc,0
 9,2,"","  RESTART","  MOTION"," ",10,4,7,2006,0
+28,8,"deltax","  deltax","",10,7,4,1,0
+29,8,"deltay","  deltay","",10,7,4,1,0
 31,3,"","   TEACH","    P[3]","",10,4,7,0,0,2011,2012,0
 34,10,"","  TEACH","  START","",10,4,7,2,PCEX 3: teach.pc,0
 49,3,"","   TEACH","    P[1]","",10,4,7,0,0,2007,2008,0
@@ -54,7 +56,7 @@ N_INT15    "teach_reset  "
       .motion_finished = FALSE
       LMOVE tframe + hockey_point[.j]
     END
-    BREAK
+    ;BREAK
     IF (.motion_finished == FALSE) THEN
       hockey_points = 0
       .motion_finished = TRUE
@@ -74,6 +76,8 @@ N_INT15    "teach_reset  "
   ;
   .timeout = 10 ; sec
   .max_bytes = 255
+  RUNMASK pc1_ok
+  SIGNAL pc1_ok
   ;
   WHILE TRUE DO
     UDP_RECVFROM .err_code, udp_port, .$recv_str[0], .null, .timeout, .ip[0], .max_bytes
@@ -104,6 +108,9 @@ N_INT15    "teach_reset  "
   ;
 .END
 .PROGRAM ifp.pc ()
+  ;
+  RUNMASK pc2_ok
+  SIGNAL pc2_ok
   ;
   WHILE TRUE DO
     .start_permission = TRUE
@@ -154,8 +161,8 @@ N_INT15    "teach_reset  "
     IF SIG (teach_ok) THEN
       POINT tframe = FRAME (p[2], p[1], p[3], p[0])
       SIGNAL teach_okl, -teach_p1l, -teach_p2l, -teach_p3l
-      deltax = -ABS(DY(p[2]) - DY(p[1]))
-      deltay = ABS(DX(p[3]) - DX(p[2]))
+      deltax = -ABS(DX(p[2]) - DX(p[1]))
+      deltay = ABS(DY(p[3]) - DY(p[2]))
       TWAIT 5
       SIGNAL -teach_okl
       GOTO fin
@@ -179,7 +186,7 @@ N_INT15    "teach_reset  "
 .PROGRAM addpoint.pc (.$str,.index) ; 
   ;
   .$temp2 = $DECODE (.$str, ";")
-  .deltax = (100 - VAL (.$temp2))
+  .deltax = (100- VAL (.$temp2))
   ;TYPE 0: .deltax
   .deltax = deltax*.deltax/100
   .$temp2 = $DECODE (.$str, ";",1)
@@ -193,6 +200,8 @@ N_INT15    "teach_reset  "
 	; @@@ PROJECT @@@
 	; @@@ HISTORY @@@
 	; @@@ INSPECTION @@@
+	; deltax
+	; deltay
 	; @@@ CONNECTION @@@
 	; Standard 1
 	; 192.168.0.2

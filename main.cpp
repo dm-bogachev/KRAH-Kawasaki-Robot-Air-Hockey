@@ -1,3 +1,5 @@
+#include <pylon/PylonIncludes.h>
+
 #include <QDebug>
 #include <QSize>
 
@@ -19,7 +21,6 @@
 #include <puckpredictor.h>
 #include <gamealgorithm.h>
 #include <cvgui.h>
-#include <pylon/PylonIncludes.h>
 
 void initBaslerParameters(std::string filename)
 {
@@ -63,8 +64,9 @@ int main()
         if (puckDetector.isPuckDetected())
         {
             puckPredictor.predict(frameGrabber, puckDetector, programSettings);
-            if (puckPredictor.predictedPointRSP.x == -1) {continue;}
-            game.process(puckDetector, puckPredictor, programSettings, frameGrabber.frameHeight);
+            if (puckPredictor.predictedPointRSP.x != -1) {
+                game.process(puckDetector, puckPredictor, programSettings, frameGrabber.frameHeight);
+            }
         }
 
         FPSCounter.stopCounter();
