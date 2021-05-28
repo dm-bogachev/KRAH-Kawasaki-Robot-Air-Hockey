@@ -35,6 +35,12 @@ GameAlgorithm::GameAlgorithm()
 void GameAlgorithm::process(PuckDetector puckDetector, PuckPredictor puckPredictor, Settings programSettings, int frameHeight)
 {
     if (puckDetector.puckTrajectoryPointsVector.size() < 2) {return;}
+    if (puckDetector.currentPoint.x < programSettings.playerZoneMargin)
+    {
+        std::vector<cv::Scalar> robotTrajectory;
+        robotTrajectory.push_back(cv::Scalar(frameHeight/2,0));
+        if (!robotTrajectory.empty()) { udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameHeight); }
+    }
     if (puckDetector.isForwardDirection())
     {
         processForward(puckDetector, puckPredictor, programSettings, frameHeight);
@@ -56,7 +62,7 @@ void GameAlgorithm::processBackward(PuckDetector puckDetector, PuckPredictor puc
             // Stage BRS
             robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
             robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y +
-                                                 puckDetector.puckAverageSpeed[1], 100)); // Maybe will be removed
+                                                 puckDetector.puckAverageSpeed[1]*1500, 100)); // Maybe will be removed
             robotTrajectory.push_back(cv::Scalar(puckDetector.currentPoint.y, 0));
             robotTrajectory.push_back(cv::Scalar(frameHeight/2,0));
         } else if ((abs(puckDetector.puckAverageSpeed[0]) > PUCK_SPEED_SLOW_B) &&

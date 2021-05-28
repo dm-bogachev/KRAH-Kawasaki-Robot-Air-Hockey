@@ -2,7 +2,9 @@
 
 void cvGUI::setupTrackbarsWindow(Settings& programSettings)
 {
-    cv::namedWindow(TRACKBARS_NAME, cv::WINDOW_AUTOSIZE);
+    cv::namedWindow(TRACKBARS_NAME, cv::WINDOW_KEEPRATIO);
+    cv::resizeWindow(TRACKBARS_NAME, 2000, 2000);
+
     cv::createTrackbar("houghParam1", TRACKBARS_NAME, &programSettings.houghParam1, 1024);
     cv::createTrackbar("houghParam2", TRACKBARS_NAME, &programSettings.houghParam2, 1024);
     cv::createTrackbar("puckMinRadius", TRACKBARS_NAME, &programSettings.puckMinRadius, 500);
@@ -18,6 +20,9 @@ void cvGUI::setupTrackbarsWindow(Settings& programSettings)
         programSettings.cameraResolution.width());
     cv::createTrackbar("robotGateYLinit", TRACKBARS_NAME,
         &programSettings.robotGateYLimit,
+        programSettings.cameraResolution.width());
+    cv::createTrackbar("playerZoneMargin", TRACKBARS_NAME,
+        &programSettings.playerZoneMargin,
         programSettings.cameraResolution.width());
     cv::createTrackbar("puckSpeedSlowF", TRACKBARS_NAME,
         &programSettings.puckSpeedSlowF, 100);
@@ -124,6 +129,10 @@ void cvGUI::displayWindows(Settings &programSettings,
     cv::line(frameGrabber.frame,
              cv::Point(MAX_ROBOT_REACH,0),
              cv::Point(MAX_ROBOT_REACH, frameGrabber.frameHeight),
+             CV_COLOR_RED, 2);
+    cv::line(frameGrabber.frame,
+             cv::Point(PLAYER_ZONE,0),
+             cv::Point(PLAYER_ZONE, frameGrabber.frameHeight),
              CV_COLOR_RED, 2);
     //
     cv::line(frameGrabber.frame,

@@ -44,6 +44,7 @@ public:
     int Kp;
     int puckPositionYLimit;
     int robotGateYLimit; // Добавить
+    int playerZoneMargin;
 };
 
 

@@ -27,6 +27,7 @@ void Settings::Save()
     settings->setValue("image_rotation_point", QPoint(cvImageRotationPoint.x, cvImageROIRect.y));
     settings->setValue("puck_position_y_limit", puckPositionYLimit);
     settings->setValue("robot_gate_y_limit", robotGateYLimit);
+    settings->setValue("player_zone_margin", playerZoneMargin);
     settings->endGroup();
 
     settings->beginGroup("Camera_properties");
@@ -79,6 +80,7 @@ void Settings::Load()
     cvImageRotationPoint = cv::Point(tmpPoint.x(), tmpPoint.y());
     puckPositionYLimit = settings->value("puck_position_y_limit", 0).toInt();
     robotGateYLimit = settings->value("robot_gate_y_limit", 0).toInt();
+    playerZoneMargin = settings->value("player_zone_margin", 0).toInt();
 
     settings->endGroup();
 

@@ -12,6 +12,7 @@
 #define VIDEO_WINDOW_NAME programSettings.videoWindowName.toStdString()
 #define TRACKBARS_NAME programSettings.trackbarsWindowName.toStdString()
 #define ROBOT_STRIKER_POSITION programSettings.robotStrikerPosition
+#define PLAYER_ZONE programSettings.playerZoneMargin
 #define MAX_ROBOT_REACH programSettings.robotStrikerPosition - programSettings.robotMotionRange
 
 #define CV_COLOR_GREEN cv::Scalar(0,255,0)
