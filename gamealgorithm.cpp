@@ -40,6 +40,7 @@ void GameAlgorithm::process(PuckDetector puckDetector, PuckPredictor puckPredict
         std::vector<cv::Scalar> robotTrajectory;
         robotTrajectory.push_back(cv::Scalar(frameHeight/2,0));
         if (!robotTrajectory.empty()) { udpSender.moveTo(robotTrajectory, programSettings.puckPositionYLimit, frameHeight); }
+        return;
     }
     if (puckDetector.isForwardDirection())
     {

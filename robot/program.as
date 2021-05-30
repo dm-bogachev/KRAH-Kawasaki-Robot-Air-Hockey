@@ -12,6 +12,8 @@ N_INT12    "teach_p3l  "
 N_INT13    "teach_ok  "
 N_INT14    "teach_okl  "
 N_INT15    "teach_reset  "
+N_INT16    "stop_motion  "
+N_INT17    "prepare_play  "
 .END
 .INTER_PANEL_D
 0,1,"  PC1 OK","","","",10,7,4,10,2001,0
@@ -20,6 +22,7 @@ N_INT15    "teach_reset  "
 6,8,"udp_port"," UDP PORT","",10,9,5,1,0
 7,10,"","  RESTART","   PCS","",10,4,9,1,PCEX 5: autostart5.pc,0
 9,2,"","  RESTART","  MOTION"," ",10,4,7,2006,0
+16,2,"","   STOP","  MOTION","",10,4,7,2016,0
 28,8,"deltax","  deltax","",10,7,4,1,0
 29,8,"deltay","  deltay","",10,7,4,1,0
 31,3,"","   TEACH","    P[3]","",10,4,7,0,0,2011,2012,0
@@ -48,10 +51,17 @@ N_INT15    "teach_reset  "
   CP ON
   TOOL NULL
   ;
+  RUNMASK motion_ok
+  SIGNAL motion_ok
+  ;
+  LMOVE tframe + TRANS (deltax/2, 0, 200)
+  LMOVE tframe + TRANS (deltax/2, 0)
+  ;TYPE 0: .deltax, .deltay
+  ;
   .motion_finished = FALSE
   hockey_points = 0
   ;
-  WHILE TRUE DO
+  WHILE SIG(-stop_motion) DO
     FOR .j = 1 TO hockey_points
       .motion_finished = FALSE
       LMOVE tframe + hockey_point[.j]
@@ -61,8 +71,9 @@ N_INT15    "teach_reset  "
       hockey_points = 0
       .motion_finished = TRUE
     END
-    
   END
+  LMOVE tframe + TRANS (deltax/2, 0)
+  LMOVE tframe + TRANS (deltax/2, 0, 200)
   ;
 .END
 .PROGRAM teach ()
@@ -245,6 +256,8 @@ N_INT15    "teach_reset  "
 	; teach_ok 
 	; teach_okl 
 	; teach_reset 
+	; stop_motion 
+	; prepare_play 
 	; @@@ TOOLS @@@
 	; hockey_tool 
 	; @@@ BASE @@@
@@ -278,4 +291,6 @@ teach_reset = 2015
 deltax = -803.214
 deltay = 360.165
 hockey_points = 2
+stop_motion = 2016
+prepare_play = 2017
 .END
