@@ -46,22 +46,23 @@ N_INT17    "prepare_play  "
 .END
 .PROGRAM hockey ()
   ;
+  RUNMASK motion_ok
+  SIGNAL motion_ok
+  ;
+  SPEED 50 MM/S ALWAYS
+  LMOVE tframe + TRANS (deltax / 2, 0, -200)
+  LMOVE tframe + TRANS (deltax / 2, 0)
+  ;TYPE 0: .deltax, .deltay
+  ;
   SPEED 100 ALWAYS
   ACCURACY 5 ALWAYS
   CP ON
   TOOL NULL
   ;
-  RUNMASK motion_ok
-  SIGNAL motion_ok
-  ;
-  LMOVE tframe + TRANS (deltax/2, 0, 200)
-  LMOVE tframe + TRANS (deltax/2, 0)
-  ;TYPE 0: .deltax, .deltay
-  ;
   .motion_finished = FALSE
   hockey_points = 0
   ;
-  WHILE SIG(-stop_motion) DO
+  WHILE SIG (-stop_motion) DO
     FOR .j = 1 TO hockey_points
       .motion_finished = FALSE
       LMOVE tframe + hockey_point[.j]
@@ -72,8 +73,10 @@ N_INT17    "prepare_play  "
       .motion_finished = TRUE
     END
   END
-  LMOVE tframe + TRANS (deltax/2, 0)
-  LMOVE tframe + TRANS (deltax/2, 0, 200)
+  ;
+  SPEED 50 MM/S ALWAYS
+  LMOVE tframe + TRANS (deltax / 2, 0)
+  LMOVE tframe + TRANS (deltax / 2, 0, -200)
   ;
 .END
 .PROGRAM teach ()
@@ -81,6 +84,12 @@ N_INT17    "prepare_play  "
   LMOVE p[1]
   LMOVE p[2]
   LMOVE p[3]
+  LMOVE tframe + TRANS (0, 0)
+  LMOVE tframe + TRANS (deltax, 0)
+  LMOVE tframe + TRANS (deltax, deltay)
+  LMOVE tframe + TRANS (0, deltay)
+  LMOVE tframe + TRANS (0, 0)
+  LMOVE tframe + TRANS (deltax / 2, 0, -200)
   ;
 .END
 .PROGRAM hockey.pc ()
@@ -194,17 +203,27 @@ N_INT17    "prepare_play  "
   END
   ;
 .END
-.PROGRAM addpoint.pc (.$str,.index) ; 
+.PROGRAM addpoint.pc (.$str, .index) ;
   ;
   .$temp2 = $DECODE (.$str, ";")
   .deltax = (100- VAL (.$temp2))
-  ;TYPE 0: .deltax
-  .deltax = deltax*.deltax/100
+  IF (.deltax >= 100) THEN
+    .deltax = 100
+  END
+  IF (.deltax < 0) THEN
+    .deltax = 0
+  END
+  .deltax = deltax * .deltax / 100
   .$temp2 = $DECODE (.$str, ";",1)
   .deltay = VAL (.$str)
-  .deltay = deltay*.deltay/100
+  IF (.deltay >= 100) THEN
+    .deltay = 100
+  END
+  IF (.deltay < 0) THEN
+    .deltay = 0
+  END
+  .deltay = deltay * .deltay / 100
   POINT hockey_point[.index] = TRANS (.deltax, .deltay)
-  ;TYPE 0: .deltax, .deltay
   ;
 .END
 .PROGRAM Comment___ () ; Comments for IDE. Do not use.
