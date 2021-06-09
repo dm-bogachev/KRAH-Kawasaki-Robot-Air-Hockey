@@ -58,8 +58,9 @@ Source: "deploy\Qt5Network.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "deploy\Qt5Test.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "deploy\Qt5Widgets.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "deploy\plugins\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "deploy\robot\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "robot\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "deploy\basler_acA2000-165um_22729612.pfs"; DestDir: "{app}"; Flags: ignoreversion
+
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
